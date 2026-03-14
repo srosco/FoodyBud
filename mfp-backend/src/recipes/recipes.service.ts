@@ -38,10 +38,12 @@ export class RecipesService {
   async update(id: string, dto: UpdateRecipeDto): Promise<Recipe> {
     const recipe = await this.findOne(id);
     if (!recipe) throw new NotFoundException(`Recipe ${id} not found`);
+    if (dto.name !== undefined) recipe.name = dto.name;
+    if (dto.totalWeightG !== undefined) recipe.totalWeightG = dto.totalWeightG;
     if (dto.items) {
       recipe.items = await this.resolveItems(dto.items);
     }
-    return this.recipeRepo.save({ ...recipe, ...dto });
+    return this.recipeRepo.save(recipe);
   }
 
   async softDelete(id: string): Promise<Recipe> {
@@ -52,6 +54,7 @@ export class RecipesService {
   }
 
   computePer100g(items: RecipeItem[], totalWeightG: number): NutriMap {
+    if (totalWeightG <= 0) throw new BadRequestException('totalWeightG must be greater than 0');
     const keys: NutrientKeys[] = ['calories', 'proteins', 'carbs', 'fat', 'fiber', 'sugars', 'saturatedFat', 'salt'];
     const totals = keys.reduce((acc, k) => ({ ...acc, [k]: 0 }), {} as NutriMap);
 
