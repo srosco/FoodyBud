@@ -3,11 +3,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FoodsModule } from './foods/foods.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { MealsModule } from './meals/meals.module';
 
 @Module({
   imports: [
     FoodsModule,
     RecipesModule,
+    MealsModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
