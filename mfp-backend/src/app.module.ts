@@ -4,12 +4,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { FoodsModule } from './foods/foods.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MealsModule } from './meals/meals.module';
+import { ActivitiesModule } from './activities/activities.module';
+import { GoalsModule } from './goals/goals.module';
 
 @Module({
   imports: [
     FoodsModule,
     RecipesModule,
     MealsModule,
+    ActivitiesModule,
+    GoalsModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
