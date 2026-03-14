@@ -14,7 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
         migrationsRun: true,
         synchronize: false,
-        ssl: process.env.NODE_ENV === 'production'
+        ssl: config.get<string>('NODE_ENV') === 'production'
           ? { rejectUnauthorized: false }
           : false,
       }),
