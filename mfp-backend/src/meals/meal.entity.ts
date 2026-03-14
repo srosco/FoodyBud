@@ -16,7 +16,7 @@ export class Meal {
   @Column({ type: 'date' })
   date: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', name: 'meal_type' })
   mealType: MealType;
 
   @CreateDateColumn()
