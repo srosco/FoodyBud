@@ -6,6 +6,7 @@ import { RecipesModule } from './recipes/recipes.module';
 import { MealsModule } from './meals/meals.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { GoalsModule } from './goals/goals.module';
+import { SummaryModule } from './summary/summary.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { GoalsModule } from './goals/goals.module';
     MealsModule,
     ActivitiesModule,
     GoalsModule,
+    SummaryModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
