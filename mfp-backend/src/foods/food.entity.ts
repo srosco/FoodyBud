@@ -11,7 +11,7 @@ export class Food {
   name: string;
 
   @Column({ nullable: true })
-  barcode: string;
+  barcode: string | null;
 
   @Column({ type: 'varchar', default: 'CUSTOM' })
   source: 'OFF' | 'CUSTOM';
