@@ -43,7 +43,7 @@ export class FoodsService {
   }
 
   async softDelete(id: string): Promise<Food> {
-    const food = await this.repo.findOne({ where: { id } });
+    const food = await this.findOne(id);  // uses IsNull() filter
     if (!food) throw new NotFoundException(`Food ${id} not found`);
     food.deletedAt = new Date();
     return this.repo.save(food);

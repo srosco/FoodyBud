@@ -1,10 +1,11 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query, NotFoundException,
 } from '@nestjs/common';
 import { FoodsService } from './foods.service';
 import { OffService } from './off.service';
 import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
+import { ScanBarcodeDto } from './dto/scan-barcode.dto';
 
 @Controller('foods')
 export class FoodsController {
@@ -19,13 +20,15 @@ export class FoodsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.foods.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const food = await this.foods.findOne(id);
+    if (!food) throw new NotFoundException(`Food ${id} not found`);
+    return food;
   }
 
   @Post('scan')
-  scan(@Body('barcode') barcode: string) {
-    return this.off.lookup(barcode);
+  scan(@Body() dto: ScanBarcodeDto) {
+    return this.off.lookup(dto.barcode);
   }
 
   @Post()
