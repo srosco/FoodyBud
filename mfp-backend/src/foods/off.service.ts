@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
@@ -20,30 +20,38 @@ export interface OFFResult {
 @Injectable()
 export class OffService {
   private readonly BASE_URL = 'https://world.openfoodfacts.org/api/v2/product';
+  private readonly logger = new Logger(OffService.name);
+
+  private readonly MICRO_VITAMIN_KEYS = ['vitamin-a', 'vitamin-c', 'vitamin-d', 'vitamin-b12', 'vitamin-e'];
+  private readonly MICRO_MINERAL_KEYS = ['iron', 'calcium', 'magnesium', 'zinc', 'potassium'];
 
   constructor(private readonly http: HttpService) {}
 
   async lookup(barcode: string): Promise<OFFResult | null> {
-    const { data } = await firstValueFrom(
-      this.http.get(`${this.BASE_URL}/${barcode}.json`),
-    );
+    let data: Record<string, unknown>;
+    try {
+      const response = await firstValueFrom(
+        this.http.get(`${this.BASE_URL}/${barcode}.json`),
+      );
+      data = response.data;
+    } catch (err) {
+      this.logger.warn(`OFF API error for barcode ${barcode}: ${(err as Error).message}`);
+      return null;
+    }
 
-    if (data.status !== 1 || !data.product) return null;
+    if (data['status'] !== 1 || !data['product']) return null;
 
-    const p = data.product;
-    const n = p.nutriments ?? {};
+    const p = data['product'] as Record<string, unknown>;
+    const n = (p['nutriments'] ?? {}) as Record<string, number>;
 
     // Prefer energy-kcal_100g (kcal); fall back to energy_100g (kJ) / 4.184
     const calories = n['energy-kcal_100g'] ?? (n['energy_100g'] ?? 0) / 4.184;
 
-    const MICRO_VITAMIN_KEYS = ['vitamin-a', 'vitamin-c', 'vitamin-d', 'vitamin-b12', 'vitamin-e'];
-    const MICRO_MINERAL_KEYS = ['iron', 'calcium', 'magnesium', 'zinc', 'potassium'];
-
-    const vitamins = this.extractMicros(n, MICRO_VITAMIN_KEYS);
-    const minerals = this.extractMicros(n, MICRO_MINERAL_KEYS);
+    const vitamins = this.extractMicros(n, this.MICRO_VITAMIN_KEYS);
+    const minerals = this.extractMicros(n, this.MICRO_MINERAL_KEYS);
 
     return {
-      name: p.product_name ?? 'Produit inconnu',
+      name: (p['product_name'] as string) ?? 'Produit inconnu',
       barcode,
       calories: Math.round(calories * 10) / 10,
       proteins: n['proteins_100g'] ?? 0,
