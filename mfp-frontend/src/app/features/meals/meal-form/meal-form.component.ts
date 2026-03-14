@@ -78,17 +78,18 @@ export class MealFormComponent implements OnInit {
         recipe: i.recipe ?? null,
         quantityG: i.quantityG,
       }));
+    } else if (this.defaultDate) {
+      this.form.patchValue({ date: this.defaultDate });
     }
-    if (this.defaultDate) this.form.patchValue({ date: this.defaultDate });
   }
 
   openPicker() {
     this.dialog.open(FoodPickerComponent).afterClosed().subscribe((result: FoodPickerResult | undefined) => {
-      if (result) this.items.push({ food: result.food ?? null, recipe: result.recipe ?? null, quantityG: result.quantityG });
+      if (result) this.items = [...this.items, { food: result.food ?? null, recipe: result.recipe ?? null, quantityG: result.quantityG }];
     });
   }
 
-  removeItem(index: number) { this.items.splice(index, 1); }
+  removeItem(index: number) { this.items = this.items.filter((_, idx) => idx !== index); }
 
   onSubmit() {
     if (this.form.valid) {

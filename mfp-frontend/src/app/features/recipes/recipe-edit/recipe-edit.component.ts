@@ -13,7 +13,7 @@ import { Recipe } from '../../../core/models/recipe.model';
   template: `
     <h1>Modifier la recette</h1>
     <app-recipe-form *ngIf="recipe()" [initialData]="recipe()!" submitLabel="Enregistrer" (submitted)="onUpdate($event)" />
-    <button mat-stroked-button color="warn" (click)="onDelete()">Supprimer</button>
+    <button mat-stroked-button color="warn" [disabled]="!recipe()" (click)="onDelete()">Supprimer</button>
   `,
 })
 export class RecipeEditComponent implements OnInit {

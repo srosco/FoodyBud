@@ -67,11 +67,11 @@ export class RecipeFormComponent implements OnInit {
 
   openPicker() {
     this.dialog.open(FoodPickerComponent).afterClosed().subscribe((result: FoodPickerResult | undefined) => {
-      if (result?.food) this.items.push({ food: result.food, quantityG: result.quantityG });
+      if (result?.food) this.items = [...this.items, { food: result.food, quantityG: result.quantityG }];
     });
   }
 
-  removeItem(index: number) { this.items.splice(index, 1); }
+  removeItem(index: number) { this.items = this.items.filter((_, idx) => idx !== index); }
 
   onSubmit() {
     if (this.form.valid) {

@@ -12,7 +12,7 @@ import { MealFormComponent } from '../meal-form/meal-form.component';
   template: `
     <h1>Modifier le repas</h1>
     <app-meal-form *ngIf="meal()" [initialData]="meal()!" submitLabel="Enregistrer" (submitted)="onUpdate($event)" />
-    <button mat-stroked-button color="warn" (click)="onDelete()">Supprimer</button>
+    <button mat-stroked-button color="warn" [disabled]="!meal()" (click)="onDelete()">Supprimer</button>
   `,
 })
 export class MealEditComponent implements OnInit {

@@ -6,6 +6,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Subject } from 'rxjs';
+import { debounceTime, switchMap } from 'rxjs/operators';
 import { FoodsService } from '../../../core/services/foods.service';
 import { RecipesService } from '../../../core/services/recipes.service';
 import { Food } from '../../../core/models/food.model';
@@ -63,13 +65,19 @@ export class FoodPickerComponent implements OnInit {
   selectedRecipe: Recipe[] = [];
   quantityG = 100;
 
+  private searchQuery$ = new Subject<string>();
+
   ngOnInit() {
-    this.searchFoods();
-    this.recipesService.getAll().subscribe((r) => this.recipes.set(r));
+    this.searchQuery$.pipe(
+      debounceTime(300),
+      switchMap(q => this.foodsService.search(q))
+    ).subscribe(f => this.foods.set(f));
+    this.searchQuery$.next(''); // initial load
+    this.recipesService.getAll().subscribe(r => this.recipes.set(r));
   }
 
   searchFoods() {
-    this.foodsService.search(this.foodQuery).subscribe((f) => this.foods.set(f));
+    this.searchQuery$.next(this.foodQuery);
   }
 
   canConfirm() {
