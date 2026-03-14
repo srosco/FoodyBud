@@ -24,7 +24,7 @@
       <app-meal-type-card
         *ngFor="let type of mealTypes"
         [mealType]="mealTypeLabels[type]"
-        [totals]="s.byMealType[type]"
+        [totals]="s.byMealType[type] ?? emptyNutriMap"
       />
     </div>
 

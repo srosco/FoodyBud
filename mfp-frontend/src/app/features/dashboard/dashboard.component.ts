@@ -28,6 +28,8 @@ export class DashboardComponent implements OnInit {
 
   mealTypes: MealType[] = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
 
+  emptyNutriMap = { calories: 0, proteins: 0, carbs: 0, fat: 0, fiber: 0, sugars: 0, saturatedFat: 0, salt: 0 };
+
   mealTypeLabels: Record<MealType, string> = {
     BREAKFAST: 'Petit-déjeuner',
     LUNCH: 'Déjeuner',
@@ -52,9 +54,9 @@ export class DashboardComponent implements OnInit {
   }
 
   navigateDay(offset: number) {
-    const d = new Date(this.currentDate());
-    d.setDate(d.getDate() + offset);
-    const newDate = d.toISOString().split('T')[0];
+    const [y, m, d] = this.currentDate().split('-').map(Number);
+    const date = new Date(y, m - 1, d + offset); // local time, no UTC issue
+    const newDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     this.router.navigate([], { queryParams: { date: newDate } });
   }
 
