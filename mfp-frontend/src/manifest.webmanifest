@@ -1,6 +1,6 @@
 {
-  "name": "mfp-frontend",
-  "short_name": "mfp-frontend",
+  "name": "MFP Food Tracker",
+  "short_name": "MFP",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",
