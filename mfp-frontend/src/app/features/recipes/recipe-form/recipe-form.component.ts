@@ -1,47 +1,327 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { CommonModule } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { FoodPickerComponent, FoodPickerResult } from '../../../shared/components/food-picker/food-picker.component';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
   selector: 'app-recipe-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatInputModule, MatButtonModule, MatIconModule, MatListModule],
+  imports: [NgFor, NgIf, ReactiveFormsModule, MatButtonModule, MatIconModule],
   template: `
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-      <mat-form-field appearance="outline">
-        <mat-label>Nom de la recette</mat-label>
-        <input matInput formControlName="name" required />
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>Poids total préparé</mat-label>
-        <input matInput type="number" formControlName="totalWeightG" required />
-        <span matSuffix>g</span>
-      </mat-form-field>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="recipe-form">
 
-      <h3>Ingrédients</h3>
-      <mat-list>
-        <mat-list-item *ngFor="let item of items; let i = index">
-          <span matListItemTitle>{{ item.food.name }}</span>
-          <span matListItemLine>{{ item.quantityG }}g</span>
-          <button mat-icon-button (click)="removeItem(i)" type="button">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-list-item>
-      </mat-list>
-      <button mat-stroked-button type="button" (click)="openPicker()">+ Ajouter un aliment</button>
+      <!-- Name -->
+      <div class="form-section">
+        <div class="field-row">
+          <div class="field-icon"><mat-icon>menu_book</mat-icon></div>
+          <input
+            class="field-input name-input"
+            type="text"
+            formControlName="name"
+            placeholder="Nom de la recette"
+          />
+        </div>
+      </div>
 
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || items.length === 0">
+      <!-- Total weight -->
+      <div class="form-section">
+        <div class="field-row">
+          <div class="field-icon"><mat-icon>scale</mat-icon></div>
+          <span class="field-label">Poids total préparé</span>
+          <div class="weight-input-wrap">
+            <input
+              class="field-input weight-input"
+              type="number"
+              formControlName="totalWeightG"
+              min="1"
+              inputmode="decimal"
+            />
+            <span class="weight-unit">g</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingredients -->
+      <div class="form-section">
+        <div class="section-header">
+          <mat-icon>nutrition</mat-icon>
+          <span class="section-title">Ingrédients</span>
+          <span class="section-count" *ngIf="items.length > 0">{{ items.length }}</span>
+        </div>
+        <div class="items-list" *ngIf="items.length > 0">
+          <div class="item-row" *ngFor="let item of items; let i = index">
+            <div class="item-dot"></div>
+            <span class="item-name">{{ item.food.name }}</span>
+            <div class="item-qty-wrap">
+              <input
+                class="qty-input"
+                type="number"
+                [value]="item.quantityG"
+                (change)="updateQty(i, $event)"
+                min="1"
+                inputmode="decimal"
+              />
+              <span class="qty-unit">g</span>
+            </div>
+            <button type="button" class="item-delete" (click)="removeItem(i)">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="add-btn" (click)="openPicker()">
+          <mat-icon>add_circle_outline</mat-icon>
+          Ajouter un ingrédient
+        </button>
+      </div>
+
+    </form>
+
+    <!-- Submit FAB -->
+    <div class="fab-wrap">
+      <button
+        mat-fab extended color="primary"
+        [disabled]="form.invalid || items.length === 0"
+        (click)="onSubmit()"
+      >
+        <mat-icon>check</mat-icon>
         {{ submitLabel }}
       </button>
-    </form>
+    </div>
   `,
+  styles: [`
+    .recipe-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      padding-bottom: 88px;
+    }
+
+    .form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* Field rows */
+    .field-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+
+    .field-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #EDF2EE;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .field-icon mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+    }
+
+    .field-label {
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--text-2, #5a6e65);
+      flex: 1;
+    }
+
+    .field-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 0;
+    }
+
+    .name-input {
+      font-weight: 400;
+    }
+    .name-input::placeholder { color: var(--text-3, #9aada5); }
+
+    .weight-input-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      background: #F4F6F1;
+      border-radius: 8px;
+      padding: 5px 10px;
+      flex-shrink: 0;
+    }
+
+    .weight-input {
+      flex: none;
+      width: 64px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .weight-input::-webkit-inner-spin-button,
+    .weight-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .weight-unit {
+      font-family: var(--font);
+      font-size: 12px;
+      color: var(--text-3, #9aada5);
+    }
+
+    /* Section header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+    }
+    .section-title {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+    }
+    .section-count {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--primary);
+      color: #fff;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Items list */
+    .items-list { padding: 4px 0; }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .item-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--primary);
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .item-name {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-qty-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      background: #F4F6F1;
+      border-radius: 8px;
+      padding: 4px 8px;
+      flex-shrink: 0;
+    }
+
+    .qty-input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      width: 44px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .qty-input::-webkit-inner-spin-button,
+    .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .qty-unit {
+      font-family: var(--font);
+      font-size: 11px;
+      color: var(--text-3, #9aada5);
+    }
+
+    .item-delete {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: none;
+      background: #FFF0EE;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #E84040;
+      flex-shrink: 0;
+    }
+    .item-delete mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+    /* Add button */
+    .add-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 13px 16px;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+    }
+    .add-btn mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+    /* FAB */
+    .fab-wrap {
+      position: fixed;
+      bottom: calc(var(--nav-h, 64px) + 16px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+    }
+  `],
 })
 export class RecipeFormComponent implements OnInit {
   @Input() initialData?: Partial<Recipe>;
@@ -72,6 +352,13 @@ export class RecipeFormComponent implements OnInit {
   }
 
   removeItem(index: number) { this.items = this.items.filter((_, idx) => idx !== index); }
+
+  updateQty(index: number, event: Event) {
+    const qty = +(event.target as HTMLInputElement).value;
+    if (qty > 0) {
+      this.items = this.items.map((item, i) => i === index ? { ...item, quantityG: qty } : item);
+    }
+  }
 
   onSubmit() {
     if (this.form.valid) {
