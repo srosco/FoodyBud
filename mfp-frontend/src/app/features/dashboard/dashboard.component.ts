@@ -144,6 +144,13 @@ export class DashboardComponent implements OnInit {
     return (meals ?? []).filter((m) => ((m as any).meal_type ?? m.mealType) === type);
   }
 
+  formatDate(iso: string): string {
+    const [y, m, d] = iso.split('-');
+    const date = new Date(+y, +m - 1, +d);
+    const day = date.toLocaleDateString('fr-FR', { weekday: 'long' });
+    return `${day.charAt(0).toUpperCase() + day.slice(1)} ${d}-${m}-${y}`;
+  }
+
   totalBurned(activities: any[]) {
     return activities.reduce((sum, a) => sum + a.caloriesBurned, 0);
   }
