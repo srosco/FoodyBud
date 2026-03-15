@@ -1,13 +1,14 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
-import { Subject } from 'rxjs';
-import { debounceTime, switchMap } from 'rxjs/operators';
+import { ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { FoodsService } from '../../../core/services/foods.service';
 import { RecipesService } from '../../../core/services/recipes.service';
 import { Food } from '../../../core/models/food.model';
@@ -22,72 +23,223 @@ export interface FoodPickerResult {
 @Component({
   selector: 'app-food-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatTabsModule, MatListModule, MatInputModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatTabsModule,
+    MatListModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
   template: `
-    <h2 mat-dialog-title>Ajouter un aliment ou une recette</h2>
+    <h2 mat-dialog-title>Ajouter un aliment</h2>
+
     <mat-dialog-content>
       <mat-tab-group>
+
         <mat-tab label="Aliments">
-          <input matInput placeholder="Rechercher..." [(ngModel)]="foodQuery" (ngModelChange)="searchFoods()" />
-          <mat-selection-list [multiple]="false" [(ngModel)]="selectedFood">
-            <mat-list-option *ngFor="let f of foods()" [value]="f">
-              {{ f.name }} — {{ f.calories }} kcal/100g
-            </mat-list-option>
-          </mat-selection-list>
+          <div class="tab-content">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Rechercher un aliment</mat-label>
+              <input matInput [formControl]="searchControl" />
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <div class="food-list">
+              <div
+                *ngFor="let food of foods()"
+                class="food-row"
+                [class.selected]="selectedFood() === food"
+                (click)="selectFood(food)"
+              >
+                <span class="food-name">{{ food.name }}</span>
+                <span class="food-meta">{{ food.calories }} kcal/100g</span>
+              </div>
+              <div *ngIf="foods().length === 0" class="empty-hint">
+                Aucun aliment trouvé
+              </div>
+            </div>
+          </div>
         </mat-tab>
+
         <mat-tab label="Recettes">
-          <mat-selection-list [multiple]="false" [(ngModel)]="selectedRecipe">
-            <mat-list-option *ngFor="let r of recipes()" [value]="r">{{ r.name }}</mat-list-option>
-          </mat-selection-list>
+          <div class="tab-content">
+            <div class="food-list">
+              <div
+                *ngFor="let recipe of recipes()"
+                class="food-row"
+                [class.selected]="selectedRecipe() === recipe"
+                (click)="selectRecipe(recipe)"
+              >
+                <span class="food-name">{{ recipe.name }}</span>
+              </div>
+              <div *ngIf="recipes().length === 0" class="empty-hint">
+                Aucune recette disponible
+              </div>
+            </div>
+          </div>
         </mat-tab>
+
       </mat-tab-group>
 
-      <mat-form-field>
+      <mat-form-field appearance="outline" class="quantity-field">
         <mat-label>Quantité (g)</mat-label>
-        <input matInput type="number" [(ngModel)]="quantityG" min="1" />
+        <input
+          matInput
+          type="number"
+          [ngModel]="quantityG()"
+          (ngModelChange)="quantityG.set(+$event)"
+          min="1"
+        />
       </mat-form-field>
     </mat-dialog-content>
-    <mat-dialog-actions>
-      <button mat-button mat-dialog-close>Annuler</button>
-      <button mat-raised-button color="primary" (click)="confirm()" [disabled]="!canConfirm()">Ajouter</button>
+
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="cancel()">Annuler</button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="confirm()"
+        [disabled]="!canAdd()"
+      >
+        Ajouter
+      </button>
     </mat-dialog-actions>
   `,
+  styles: [`
+    mat-dialog-content {
+      min-width: 320px;
+      max-width: 480px;
+      padding-bottom: 8px;
+    }
+
+    .tab-content {
+      padding-top: 12px;
+    }
+
+    .search-field {
+      width: 100%;
+    }
+
+    .food-list {
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      background: var(--surface);
+    }
+
+    .food-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .food-row:last-child {
+      border-bottom: none;
+    }
+
+    .food-row:hover {
+      background: var(--surface-2);
+    }
+
+    .food-row.selected {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .food-row.selected .food-name,
+    .food-row.selected .food-meta {
+      color: var(--primary);
+    }
+
+    .food-name {
+      font-weight: 500;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .food-meta {
+      font-size: 12px;
+      color: var(--text-2);
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    .empty-hint {
+      padding: 16px;
+      text-align: center;
+      color: var(--text-3);
+      font-size: 13px;
+    }
+
+    .quantity-field {
+      width: 100%;
+      margin-top: 16px;
+    }
+  `],
 })
 export class FoodPickerComponent implements OnInit {
   private foodsService = inject(FoodsService);
   private recipesService = inject(RecipesService);
-  private dialogRef = inject(MatDialogRef<FoodPickerComponent>);
+  readonly dialogRef = inject(MatDialogRef<FoodPickerComponent>);
 
+  searchControl = new FormControl('');
+
+  searchQuery = signal('');
   foods = signal<Food[]>([]);
   recipes = signal<Recipe[]>([]);
-  foodQuery = '';
-  selectedFood: Food[] = [];
-  selectedRecipe: Recipe[] = [];
-  quantityG = 100;
+  selectedFood = signal<Food | null>(null);
+  selectedRecipe = signal<Recipe | null>(null);
+  quantityG = signal(100);
 
-  private searchQuery$ = new Subject<string>();
+  canAdd = computed(
+    () => (this.selectedFood() !== null || this.selectedRecipe() !== null) && this.quantityG() > 0,
+  );
 
-  ngOnInit() {
-    this.searchQuery$.pipe(
+  ngOnInit(): void {
+    this.searchControl.valueChanges.pipe(
       debounceTime(300),
-      switchMap(q => this.foodsService.search(q))
-    ).subscribe(f => this.foods.set(f));
-    this.searchQuery$.next(''); // initial load
-    this.recipesService.getAll().subscribe(r => this.recipes.set(r));
+      distinctUntilChanged(),
+      switchMap((q) => this.foodsService.search(q ?? '')),
+    ).subscribe((foods) => this.foods.set(foods));
+
+    // Initial load
+    this.foodsService.search('').subscribe((foods) => this.foods.set(foods));
+
+    this.recipesService.getAll().subscribe((recipes) => this.recipes.set(recipes));
   }
 
-  searchFoods() {
-    this.searchQuery$.next(this.foodQuery);
+  selectFood(food: Food): void {
+    this.selectedFood.set(food);
+    this.selectedRecipe.set(null);
   }
 
-  canConfirm() {
-    return (this.selectedFood.length > 0 || this.selectedRecipe.length > 0) && this.quantityG > 0;
+  selectRecipe(recipe: Recipe): void {
+    this.selectedRecipe.set(recipe);
+    this.selectedFood.set(null);
   }
 
-  confirm() {
-    const result: FoodPickerResult = { quantityG: this.quantityG };
-    if (this.selectedFood.length > 0) result.food = this.selectedFood[0];
-    else result.recipe = this.selectedRecipe[0];
-    this.dialogRef.close(result);
+  cancel(): void {
+    this.dialogRef.close();
+  }
+
+  confirm(): void {
+    const food = this.selectedFood();
+    const recipe = this.selectedRecipe();
+    if (!food && !recipe) return;
+    this.dialogRef.close({
+      food: food ?? undefined,
+      recipe: recipe ?? undefined,
+      quantityG: this.quantityG(),
+    });
   }
 }
