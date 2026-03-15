@@ -8,7 +8,7 @@
     <span class="date-label">
       {{ currentDate() === today ? "Aujourd'hui" : currentDate() }}
     </span>
-    <button mat-icon-button (click)="navigateDay(1)" [disabled]="currentDate() === today">
+    <button mat-icon-button (click)="navigateDay(1)">
       <mat-icon>chevron_right</mat-icon>
     </button>
   </div>
