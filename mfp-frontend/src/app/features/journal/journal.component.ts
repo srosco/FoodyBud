@@ -1,12 +1,20 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, NativeDateAdapter, DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
+
+class MondayFirstDateAdapter extends NativeDateAdapter {
+  override getFirstDayOfWeek(): number { return 1; }
+}
 
 @Component({
   selector: 'app-journal',
   standalone: true,
   imports: [MatDatepickerModule, MatNativeDateModule],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'fr-FR' },
+    { provide: DateAdapter, useClass: MondayFirstDateAdapter, deps: [MAT_DATE_LOCALE] },
+  ],
   template: `
     <div class="journal-page page">
       <div class="journal-header">
