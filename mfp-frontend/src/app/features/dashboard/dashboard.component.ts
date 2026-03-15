@@ -141,7 +141,7 @@ export class DashboardComponent implements OnInit {
   }
 
   getMealsByType(meals: Meal[], type: MealType): Meal[] {
-    return (meals ?? []).filter((m) => m.mealType === type);
+    return (meals ?? []).filter((m) => ((m as any).meal_type ?? m.mealType) === type);
   }
 
   totalBurned(activities: any[]) {
