@@ -89,12 +89,82 @@ import type { Summary } from '../../core/models/summary.model';
       color: var(--primary);
     }
 
-    .fab-wrap {
-      display: flex;
-      justify-content: center;
-      margin-top: 28px;
-      padding-bottom: 8px;
+    /* Speed-dial FAB */
+    .fab-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 48;
     }
+    .fab-backdrop.open { display: block; }
+
+    .fab-container {
+      position: fixed;
+      bottom: calc(var(--nav-h, 64px) + 16px);
+      left: 20px;
+      z-index: 49;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .fab-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.18s, transform 0.18s;
+    }
+    .fab-container.open .fab-actions {
+      pointer-events: auto;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .fab-action {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px 10px 14px;
+      border: none;
+      border-radius: 50px;
+      background: var(--surface);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .fab-action mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--primary);
+    }
+
+    .fab-main {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(21,116,68,0.4);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .fab-main mat-icon { font-size: 26px; width: 26px; height: 26px; }
+    .fab-container.open .fab-main { transform: rotate(45deg); }
   `],
 })
 export class DashboardComponent implements OnInit {
@@ -105,6 +175,7 @@ export class DashboardComponent implements OnInit {
   summary = signal<Summary | null>(null);
   today = new Date().toISOString().split('T')[0];
   currentDate = signal<string>(this.today);
+  fabOpen = signal(false);
 
   mealTypes: MealType[] = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
 
@@ -130,7 +201,13 @@ export class DashboardComponent implements OnInit {
   }
 
   addMeal() {
+    this.fabOpen.set(false);
     this.router.navigate(['/repas/nouveau'], { queryParams: { date: this.currentDate() } });
+  }
+
+  goToScan() {
+    this.fabOpen.set(false);
+    this.router.navigate(['/aliments/scan']);
   }
 
   navigateDay(offset: number) {

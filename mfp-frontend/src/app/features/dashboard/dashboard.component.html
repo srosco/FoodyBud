@@ -57,13 +57,23 @@
       </div>
     </ng-container>
 
-    <!-- FAB add meal -->
-    <div class="fab-wrap">
-      <button mat-fab extended color="primary" (click)="addMeal()">
-        <mat-icon>add</mat-icon>
-        Ajouter un repas
+  </ng-container>
+
+  <!-- Speed-dial FAB -->
+  <div class="fab-backdrop" [class.open]="fabOpen()" (click)="fabOpen.set(false)"></div>
+  <div class="fab-container" [class.open]="fabOpen()">
+    <div class="fab-actions">
+      <button class="fab-action" (click)="addMeal()">
+        <mat-icon>restaurant</mat-icon>
+        <span>Ajouter un repas</span>
+      </button>
+      <button class="fab-action" (click)="goToScan()">
+        <mat-icon>qr_code_scanner</mat-icon>
+        <span>Scanner un aliment</span>
       </button>
     </div>
-
-  </ng-container>
+    <button class="fab-main" (click)="fabOpen.set(!fabOpen())">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
 </div>

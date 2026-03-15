@@ -21,7 +21,7 @@ class MondayFirstDateAdapter extends NativeDateAdapter {
         <p class="journal-subtitle">Sélectionne un jour pour voir ton journal</p>
       </div>
       <div class="calendar-wrap">
-        <mat-calendar [maxDate]="today" (selectedChange)="onDateSelected($event)" />
+        <mat-calendar (selectedChange)="onDateSelected($event)" />
       </div>
     </div>
   `,
