@@ -1,0 +1,72 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// ── Custom green palette ──────────────────────────────────────────────
+$mfp-green: (
+  50:  #e8f5ee,
+  100: #c5e7d3,
+  200: #9ed7b6,
+  300: #75c797,
+  400: #54bb81,
+  500: #33ae6a,
+  600: #2a9d5f,
+  700: #1f8851,
+  800: #157444,
+  900: #085030,
+  contrast: (
+    50:  rgba(0,0,0,.87),
+    100: rgba(0,0,0,.87),
+    200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87),
+    400: rgba(0,0,0,.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  ),
+);
+
+$mfp-orange: (
+  50:  #fff3e0,
+  100: #ffe0b2,
+  200: #ffcc80,
+  300: #ffb74d,
+  400: #ffa726,
+  500: #E8702A,
+  600: #dc6520,
+  700: #c85515,
+  800: #b5460c,
+  900: #8d2e00,
+  contrast: (
+    50:  rgba(0,0,0,.87),
+    100: rgba(0,0,0,.87),
+    200: rgba(0,0,0,.87),
+    300: rgba(0,0,0,.87),
+    400: rgba(0,0,0,.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  ),
+);
+
+$primary: mat.define-palette($mfp-green, 800, 500, 900);
+$accent:  mat.define-palette($mfp-orange, 500, 300, 700);
+$warn:    mat.define-palette(mat.$red-palette);
+
+$light-theme: mat.define-light-theme((
+  color: (
+    primary: $primary,
+    accent:  $accent,
+    warn:    $warn,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: "'DM Sans', sans-serif",
+  ),
+  density: 0,
+));
+
+@include mat.all-component-themes($light-theme);

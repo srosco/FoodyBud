@@ -25,7 +25,7 @@ import { SummaryModule } from './summary/summary.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
         migrationsRun: true,
-        synchronize: false,
+        synchronize: config.get<string>('NODE_ENV') !== 'production',
         ssl: config.get<string>('NODE_ENV') === 'production'
           ? { rejectUnauthorized: false }
           : false,

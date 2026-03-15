@@ -1,4 +1,199 @@
-/* You can add global styles to this file, and also import other style files */
+/* ─── Design tokens ─── */
+:root {
+  color-scheme: light only;
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+  --bg:            #F4F6F1;
+  --surface:       #FFFFFF;
+  --surface-2:     #EFF2EC;
+  --surface-3:     #E6EDE8;
+
+  --primary:       #157444;
+  --primary-mid:   #1f8851;
+  --primary-light: #DFF0E7;
+  --primary-text:  #FFFFFF;
+
+  --orange:        #E8702A;
+  --orange-light:  #FFF0E6;
+
+  --text:          #1A2820;
+  --text-2:        #5A6E65;
+  --text-3:        #9AADA5;
+
+  --border:        #E2E8E0;
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow:        0 2px 8px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.05);
+
+  --protein:       #4A8FD4;
+  --carbs:         #F0A500;
+  --fat:           #E8702A;
+  --fiber:         #52B080;
+
+  --r:             16px;
+  --r-sm:          10px;
+
+  --font:          'DM Sans', sans-serif;
+  --font-display:  'Syne', sans-serif;
+
+  --nav-h:         64px;
+}
+
+/* ─── Reset & Base ─── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  height: 100%;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg);
+}
+
+/* ─── Material overrides — light theme enforcement ─── */
+
+.mat-app-background,
+.mat-drawer-container {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+/* Toolbar */
+.mat-toolbar,
+.mat-mdc-toolbar {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-sm) !important;
+  font-family: var(--font) !important;
+  font-weight: 600 !important;
+}
+
+/* Cards */
+.mat-mdc-card {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border-radius: var(--r) !important;
+  border: 1px solid var(--border) !important;
+}
+.mat-mdc-card-title { color: var(--text) !important; font-family: var(--font) !important; font-weight: 600 !important; }
+.mat-mdc-card-subtitle { color: var(--text-2) !important; font-family: var(--font) !important; }
+
+/* Buttons */
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button,
+.mat-mdc-flat-button,
+.mat-mdc-fab,
+.mat-mdc-extended-fab,
+.mat-mdc-icon-button {
+  font-family: var(--font) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.mat-mdc-fab,
+.mat-mdc-extended-fab {
+  border-radius: 50px !important;
+  background-color: var(--primary) !important;
+  color: var(--primary-text) !important;
+  box-shadow: 0 4px 16px rgba(21, 116, 68, 0.28) !important;
+}
+
+/* Icon buttons */
+.mat-mdc-icon-button .mat-icon { color: var(--text-2) !important; }
+
+/* Form fields */
+.mat-mdc-form-field,
+.mat-mdc-input-element,
+.mdc-text-field__input {
+  font-family: var(--font) !important;
+  color: var(--text) !important;
+}
+.mdc-text-field {
+  border-radius: var(--r-sm) !important;
+  background-color: var(--surface) !important;
+}
+.mdc-text-field--filled:not(.mdc-text-field--disabled) {
+  background-color: var(--surface-2) !important;
+}
+
+/* Snackbar */
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--text) !important;
+  --mdc-snackbar-supporting-text-color: var(--surface) !important;
+  border-radius: var(--r-sm) !important;
+}
+
+/* Progress bars */
+.mat-mdc-progress-bar {
+  border-radius: 99px !important;
+  overflow: hidden;
+}
+.mat-mdc-progress-bar .mdc-linear-progress__buffer-bar {
+  background-color: var(--surface-2) !important;
+}
+
+/* List */
+.mat-mdc-list-item { color: var(--text) !important; font-family: var(--font) !important; }
+
+/* Tabs */
+.mat-mdc-tab-group,
+.mat-mdc-tab-header { background-color: var(--surface) !important; }
+.mat-mdc-tab .mdc-tab__text-label { color: var(--text-2) !important; font-family: var(--font) !important; font-weight: 500 !important; }
+.mat-mdc-tab.mdc-tab--active .mdc-tab__text-label { color: var(--primary) !important; }
+.mdc-tab-indicator__content--underline { border-color: var(--primary) !important; }
+
+/* Dialog */
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--surface) !important;
+  border-radius: var(--r) !important;
+}
+.mat-mdc-dialog-title { color: var(--text) !important; font-family: var(--font-display) !important; }
+
+/* Chips */
+.mat-mdc-chip { font-family: var(--font) !important; background-color: var(--surface-2) !important; color: var(--text) !important; }
+
+/* Select / Option */
+.mat-mdc-select-value { color: var(--text) !important; font-family: var(--font) !important; }
+.mat-mdc-option { color: var(--text) !important; font-family: var(--font) !important; }
+.mat-mdc-option.mdc-list-item--selected { background-color: var(--primary-light) !important; }
+
+/* ─── Layout helpers ─── */
+.page {
+  padding: 16px 16px calc(var(--nav-h) + 24px);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: 24px 0 10px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+}

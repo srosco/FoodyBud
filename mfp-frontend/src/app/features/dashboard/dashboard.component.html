@@ -1,46 +1,67 @@
-<div class="dashboard">
+<div class="dashboard page">
+
+  <!-- Date navigation -->
   <div class="date-nav">
-    <button mat-icon-button (click)="navigateDay(-1)"><mat-icon>chevron_left</mat-icon></button>
-    <span>{{ currentDate() === today ? "Aujourd'hui" : currentDate() }}</span>
+    <button mat-icon-button (click)="navigateDay(-1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="date-label">
+      {{ currentDate() === today ? "Aujourd'hui" : currentDate() }}
+    </span>
     <button mat-icon-button (click)="navigateDay(1)" [disabled]="currentDate() === today">
       <mat-icon>chevron_right</mat-icon>
     </button>
   </div>
 
   <ng-container *ngIf="summary() as s">
+
     <!-- Calories ring -->
-    <app-calories-ring [consumed]="s.totals.calories" [goal]="s.goals.calories" />
+    <div class="ring-section">
+      <app-calories-ring [consumed]="s.totals.calories" [goal]="s.goals?.calories ?? 2000" />
+    </div>
 
     <!-- Macros -->
-    <div class="macros">
-      <app-macro-bar label="Protéines" [consumed]="s.totals.proteins" [goal]="s.goals.proteins" />
-      <app-macro-bar label="Glucides" [consumed]="s.totals.carbs" [goal]="s.goals.carbs" />
-      <app-macro-bar label="Lipides" [consumed]="s.totals.fat" [goal]="s.goals.fat" />
-      <app-macro-bar label="Fibres" [consumed]="s.totals.fiber" [goal]="s.goals.fiber" />
+    <div class="card macros-card">
+      <app-macro-bar
+        label="Protéines"   [consumed]="s.totals.proteins" [goal]="s.goals?.proteins ?? 150" color="#4A8FD4" />
+      <app-macro-bar
+        label="Glucides"    [consumed]="s.totals.carbs"    [goal]="s.goals?.carbs    ?? 250" color="#F0A500" />
+      <app-macro-bar
+        label="Lipides"     [consumed]="s.totals.fat"      [goal]="s.goals?.fat      ?? 65"  color="#E8702A" />
+      <app-macro-bar
+        label="Fibres"      [consumed]="s.totals.fiber"    [goal]="s.goals?.fiber    ?? 25"  color="#52B080" />
     </div>
 
     <!-- By meal type -->
+    <p class="section-label">Repas</p>
     <div class="meal-types">
       <app-meal-type-card
         *ngFor="let type of mealTypes"
         [mealType]="mealTypeLabels[type]"
+        [mealTypeKey]="type"
         [totals]="s.byMealType[type] ?? emptyNutriMap"
       />
     </div>
 
     <!-- Activities -->
-    <div class="activities" *ngIf="s.activities.length">
-      <h3>Activités <span>({{ totalBurned(s.activities) }} kcal brûlées)</span></h3>
-      <mat-list>
-        <mat-list-item *ngFor="let a of s.activities">
-          {{ a.name }} — {{ a.caloriesBurned }} kcal
-        </mat-list-item>
-      </mat-list>
+    <ng-container *ngIf="s.activities.length">
+      <p class="section-label">Activités</p>
+      <div class="card activities-card">
+        <div class="activity-row" *ngFor="let a of s.activities">
+          <div class="activity-icon"><mat-icon>directions_run</mat-icon></div>
+          <span class="activity-name">{{ a.name }}</span>
+          <span class="activity-kcal">−{{ a.caloriesBurned }}&nbsp;kcal</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- FAB add meal -->
+    <div class="fab-wrap">
+      <button mat-fab extended color="primary" (click)="addMeal()">
+        <mat-icon>add</mat-icon>
+        Ajouter un repas
+      </button>
     </div>
 
-    <!-- Quick add button -->
-    <button mat-fab extended color="primary" class="fab-add" (click)="addMeal()">
-      <mat-icon>add</mat-icon> Ajouter un repas
-    </button>
   </ng-container>
 </div>

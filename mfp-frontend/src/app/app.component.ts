@@ -1,45 +1,108 @@
 import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatToolbarModule, MatIconModule, CommonModule, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, MatIconModule, CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <mat-toolbar color="primary">
-      <span>MFP</span>
-    </mat-toolbar>
-
     <main class="content">
       <router-outlet />
     </main>
 
     <nav class="bottom-nav">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
-        <mat-icon>home</mat-icon><span>Journal</span>
+        <span class="nav-icon"><mat-icon>home</mat-icon></span>
+        <span class="nav-label">Journal</span>
       </a>
       <a routerLink="/journal" routerLinkActive="active">
-        <mat-icon>calendar_month</mat-icon><span>Calendrier</span>
+        <span class="nav-icon"><mat-icon>calendar_month</mat-icon></span>
+        <span class="nav-label">Calendrier</span>
       </a>
       <a routerLink="/aliments" routerLinkActive="active">
-        <mat-icon>restaurant</mat-icon><span>Aliments</span>
+        <span class="nav-icon"><mat-icon>restaurant</mat-icon></span>
+        <span class="nav-label">Aliments</span>
       </a>
       <a routerLink="/recettes" routerLinkActive="active">
-        <mat-icon>menu_book</mat-icon><span>Recettes</span>
+        <span class="nav-icon"><mat-icon>menu_book</mat-icon></span>
+        <span class="nav-label">Recettes</span>
       </a>
       <a routerLink="/objectifs" routerLinkActive="active">
-        <mat-icon>flag</mat-icon><span>Objectifs</span>
+        <span class="nav-icon"><mat-icon>flag</mat-icon></span>
+        <span class="nav-label">Objectifs</span>
       </a>
     </nav>
   `,
   styles: [`
-    .content { padding-bottom: 64px; }
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; background: white; border-top: 1px solid #e0e0e0; }
-    .bottom-nav a { display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1; text-decoration: none; color: rgba(0,0,0,0.54); padding: 8px 0; font-size: 11px; }
-    .bottom-nav a.active { color: #3f51b5; }
+    :host {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: var(--nav-h, 64px);
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-h, 64px);
+      display: flex;
+      justify-content: space-around;
+      align-items: stretch;
+      background: var(--surface, #fff);
+      border-top: 1px solid var(--border, #e2e8e0);
+      padding: 0 4px;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      z-index: 100;
+    }
+    .bottom-nav a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      flex: 1;
+      text-decoration: none;
+      color: var(--text-3, #9aada5);
+      padding: 8px 4px;
+      border-radius: 12px;
+      margin: 6px 2px;
+      transition: color 0.18s, background 0.18s;
+      font-family: var(--font, 'DM Sans', sans-serif);
+    }
+    .bottom-nav a:hover {
+      background: var(--primary-light, #dff0e7);
+      color: var(--primary, #2b5e45);
+    }
+    .bottom-nav a.active {
+      color: var(--primary, #2b5e45);
+      background: var(--primary-light, #dff0e7);
+    }
+    .bottom-nav a.active .nav-icon {
+      transform: translateY(-1px);
+    }
+    .nav-icon {
+      display: flex;
+      align-items: center;
+      transition: transform 0.18s;
+    }
+    .nav-icon mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
+    .nav-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      line-height: 1;
+    }
   `],
 })
 export class AppComponent {}

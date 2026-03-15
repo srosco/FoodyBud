@@ -10,7 +10,7 @@ export class Food {
   @Column()
   name: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   barcode: string | null;
 
   @Column({ type: 'varchar', default: 'CUSTOM' })
