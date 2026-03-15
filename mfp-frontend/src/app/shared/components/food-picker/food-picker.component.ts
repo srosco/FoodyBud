@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
@@ -8,7 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, startWith, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { FoodsService } from '../../../core/services/foods.service';
 import { RecipesService } from '../../../core/services/recipes.service';
 import { Food } from '../../../core/models/food.model';
@@ -190,11 +192,11 @@ export interface FoodPickerResult {
 export class FoodPickerComponent implements OnInit {
   private foodsService = inject(FoodsService);
   private recipesService = inject(RecipesService);
-  readonly dialogRef = inject(MatDialogRef<FoodPickerComponent>);
+  private destroyRef = inject(DestroyRef);
+  private readonly dialogRef = inject(MatDialogRef<FoodPickerComponent>);
 
   searchControl = new FormControl('');
 
-  searchQuery = signal('');
   foods = signal<Food[]>([]);
   recipes = signal<Recipe[]>([]);
   selectedFood = signal<Food | null>(null);
@@ -207,15 +209,20 @@ export class FoodPickerComponent implements OnInit {
 
   ngOnInit(): void {
     this.searchControl.valueChanges.pipe(
+      startWith(''),
       debounceTime(300),
       distinctUntilChanged(),
-      switchMap((q) => this.foodsService.search(q ?? '')),
+      switchMap((q) =>
+        this.foodsService.search(q ?? '').pipe(
+          catchError(() => of([]))
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef),
     ).subscribe((foods) => this.foods.set(foods));
 
-    // Initial load
-    this.foodsService.search('').subscribe((foods) => this.foods.set(foods));
-
-    this.recipesService.getAll().subscribe((recipes) => this.recipes.set(recipes));
+    this.recipesService.getAll().pipe(
+      catchError(() => of([]))
+    ).subscribe((recipes) => this.recipes.set(recipes));
   }
 
   selectFood(food: Food): void {
