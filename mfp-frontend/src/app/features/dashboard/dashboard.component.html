@@ -40,6 +40,8 @@
         [mealType]="mealTypeLabels[type]"
         [mealTypeKey]="type"
         [totals]="s.byMealType[type] ?? emptyNutriMap"
+        [meals]="getMealsByType(s.meals, type)"
+        [currentDate]="currentDate()"
       />
     </div>
 

@@ -65,9 +65,17 @@ import { FoodPickerComponent, FoodPickerResult } from '../../../shared/component
         <div class="items-list" *ngIf="items.length > 0">
           <div class="item-row" *ngFor="let item of items; let i = index">
             <div class="item-dot"></div>
-            <div class="item-info">
-              <span class="item-name">{{ item.food?.name ?? item.recipe?.name }}</span>
-              <span class="item-qty">{{ item.quantityG }}g</span>
+            <span class="item-name">{{ item.food?.name ?? item.recipe?.name }}</span>
+            <div class="item-qty-wrap">
+              <input
+                class="qty-input"
+                type="number"
+                [value]="item.quantityG"
+                (change)="updateQty(i, $event)"
+                min="1"
+                inputmode="decimal"
+              />
+              <span class="qty-unit">g</span>
             </div>
             <button type="button" class="item-delete" (click)="removeItem(i)">
               <mat-icon>close</mat-icon>
@@ -256,16 +264,9 @@ import { FoodPickerComponent, FoodPickerResult } from '../../../shared/component
       opacity: 0.6;
     }
 
-    .item-info {
+    .item-name {
       flex: 1;
       min-width: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .item-name {
       font-family: var(--font);
       font-size: 14px;
       font-weight: 600;
@@ -275,13 +276,35 @@ import { FoodPickerComponent, FoodPickerResult } from '../../../shared/component
       text-overflow: ellipsis;
     }
 
-    .item-qty {
+    .item-qty-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      background: #F4F6F1;
+      border-radius: 8px;
+      padding: 4px 8px;
+      flex-shrink: 0;
+    }
+
+    .qty-input {
+      border: none;
+      outline: none;
+      background: transparent;
       font-family: var(--font);
       font-size: 13px;
       font-weight: 600;
-      color: var(--text-3, #9aada5);
-      flex-shrink: 0;
+      color: var(--text);
+      width: 44px;
+      text-align: right;
       font-variant-numeric: tabular-nums;
+    }
+    .qty-input::-webkit-inner-spin-button,
+    .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .qty-unit {
+      font-family: var(--font);
+      font-size: 11px;
+      color: var(--text-3, #9aada5);
     }
 
     .item-delete {
@@ -371,6 +394,13 @@ export class MealFormComponent implements OnInit {
   }
 
   removeItem(index: number) { this.items = this.items.filter((_, idx) => idx !== index); }
+
+  updateQty(index: number, event: Event) {
+    const qty = +(event.target as HTMLInputElement).value;
+    if (qty > 0) {
+      this.items = this.items.map((item, i) => i === index ? { ...item, quantityG: qty } : item);
+    }
+  }
 
   onSubmit() {
     if (this.form.valid) {

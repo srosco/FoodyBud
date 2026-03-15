@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SummaryService } from '../../core/services/summary.service';
-import { MealType } from '../../core/models/meal.model';
+import { MealType, Meal } from '../../core/models/meal.model';
 import { CaloriesRingComponent } from './components/calories-ring/calories-ring.component';
 import { MacroBarComponent } from './components/macro-bar/macro-bar.component';
 import { MealTypeCardComponent } from './components/meal-type-card/meal-type-card.component';
@@ -138,6 +138,10 @@ export class DashboardComponent implements OnInit {
     const date = new Date(y, m - 1, d + offset);
     const newDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     this.router.navigate([], { queryParams: { date: newDate } });
+  }
+
+  getMealsByType(meals: Meal[], type: MealType): Meal[] {
+    return (meals ?? []).filter((m) => m.mealType === type);
   }
 
   totalBurned(activities: any[]) {
