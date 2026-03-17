@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD } from '@nestjs/core';
 import { FoodsModule } from './foods/foods.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MealsModule } from './meals/meals.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { GoalsModule } from './goals/goals.module';
 import { SummaryModule } from './summary/summary.module';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -16,6 +19,7 @@ import { SummaryModule } from './summary/summary.module';
     ActivitiesModule,
     GoalsModule,
     SummaryModule,
+    AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -33,5 +37,6 @@ import { SummaryModule } from './summary/summary.module';
       inject: [ConfigService],
     }),
   ],
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class AppModule {}
