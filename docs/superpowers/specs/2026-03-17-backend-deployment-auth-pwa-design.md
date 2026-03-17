@@ -19,7 +19,7 @@ All services are free tier.
 | Backend (NestJS) | Render (free web service) | `https://foodybud-api.onrender.com` |
 | Database (PostgreSQL) | Neon (serverless free) | `postgres://...@...neon.tech/neondb?sslmode=require` |
 
-**Render free tier note:** Service spins down after 15 min of inactivity. First request after inactivity has a ~30-50s cold start. Acceptable for personal use. A keep-alive ping can be added later if needed.
+**Render free tier note:** Service spins down after 15 min of inactivity. First request after inactivity has a ~30-50s cold start. Acceptable for personal use.
 
 **Netlify SPA routing:** A `_redirects` file (`/* /index.html 200`) handles Angular client-side routing.
 
@@ -40,7 +40,7 @@ src/auth/
   auth.service.ts        bcrypt hashing, JWT signing
   jwt.strategy.ts        extracts userId from Bearer token
   jwt-auth.guard.ts      global guard — all routes protected by default
-  public.decorator.ts    @Public() decorator to exempt specific routes
+  public.decorator.ts    @Public() decorator to exempt /auth/login and /auth/register
 
 src/users/
   user.entity.ts         id (uuid), email (unique), passwordHash, createdAt
@@ -48,31 +48,89 @@ src/users/
   users.service.ts       findByEmail(), create()
 ```
 
+### API contracts
+
+Both endpoints return `{ access_token: string }` on success.
+
+```
+POST /auth/register  { email, password }  → 201 { access_token }
+POST /auth/login     { email, password }  → 200 { access_token }
+```
+
+Error responses: 401 for invalid credentials, 409 for duplicate email on register.
+
+**Password rules (enforced in `auth.service.ts`):** minimum 8 characters. Same rule shown client-side in the register form.
+
 ### Token strategy
 
 - Access token JWT: `{ sub: userId, email }`, 7-day expiry (personal use, simplicity)
 - Stored in Angular `localStorage`
 - No refresh token for now — easy to add later
 
+### JwtModule wiring (in `auth.module.ts`)
+
+```typescript
+JwtModule.registerAsync({
+  imports: [ConfigModule],
+  useFactory: (config: ConfigService) => ({
+    secret: config.get<string>('JWT_SECRET'),
+    signOptions: { expiresIn: '7d' },
+  }),
+  inject: [ConfigService],
+})
+```
+
+### CORS (in `main.ts`)
+
+```typescript
+app.enableCors({
+  origin: process.env.FRONTEND_URL,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true, // set true now to avoid a breaking change when refresh tokens are added
+});
+```
+
+### PORT binding (in `main.ts`)
+
+```typescript
+await app.listen(process.env.PORT ?? 3000);
+```
+
+Do **not** set `PORT` as a fixed env var on Render — Render injects it dynamically.
+
 ### Entity changes
 
 Every existing entity (`Food`, `Recipe`, `Meal`, `Activity`, `Goal`) receives:
 
 ```typescript
+@Column({ name: 'user_id', nullable: false })
+userId: string;
+
 @ManyToOne(() => User)
 @JoinColumn({ name: 'user_id' })
 user: User;
-
-@Column({ name: 'user_id' })
-userId: string;
 ```
 
-Every service method filters queries by `userId` extracted from the JWT payload via the guard.
+**Data isolation convention:** Every service method **must** filter by `userId`. To avoid silent data leaks, each service receives the `userId` from the controller (extracted from `@Request() req` or a `@CurrentUser()` decorator), and passes it explicitly to every repository query. A code reviewer checklist item: confirm no `find()` or `findBy()` call omits `{ where: { userId } }`.
 
-### Database migration
+### Database migration strategy
 
-- Dev: `synchronize: true` (TypeORM auto-creates columns)
-- Prod (Neon): `migrationsRun: true` already configured — generate a migration before first deploy
+**Dev:** `synchronize: true` — TypeORM auto-creates/alters tables. **Important:** Adding `nullable: false` userId columns to tables that already have rows will fail. Before running the dev server after entity changes, drop and recreate the local Docker database:
+```bash
+docker exec mfp-postgres psql -U mfp -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+```
+
+**Prod (Neon):** `synchronize: false`, `migrationsRun: true`.
+
+The first migration must be a **full initial schema** (all tables + userId columns), not an incremental alter, because Neon starts with an empty database.
+
+Generate after all entity changes are finalized:
+```bash
+cd mfp-backend
+npx typeorm-ts-node-commonjs migration:generate src/database/migrations/InitialSchema -d src/database/data-source.ts
+```
+
+Commit the generated migration file before deploying to Render.
 
 ---
 
@@ -82,31 +140,58 @@ Every service method filters queries by `userId` extracted from the JWT payload 
 
 ```
 src/app/core/
-  services/auth.service.ts           login(), register(), logout(), token in localStorage
-  interceptors/auth.interceptor.ts   adds "Authorization: Bearer <token>" to all requests
-  guards/auth.guard.ts               redirects to /login if no valid token
+  services/auth.service.ts           login(), register(), logout(), isTokenValid(), token in localStorage
+  interceptors/auth.interceptor.ts   adds "Authorization: Bearer <token>" to all requests;
+                                     on 401 response → logout() + redirect to /login
+                                     EXCEPT for requests to /auth/login or /auth/register
+  guards/auth.guard.ts               validates token via isTokenValid(); redirects to /login if invalid
 
 src/app/features/auth/
   login/login.component.ts           email + password form
-  register/register.component.ts     email + password + confirm form
+  register/register.component.ts     email + password + confirm form (min 8 chars)
 ```
+
+### Token validation in `auth.service.ts`
+
+```typescript
+isTokenValid(): boolean {
+  const token = localStorage.getItem('access_token');
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+```
+
+### 401 handling in interceptor
+
+If any API call returns 401 **and** the URL does not match `/auth/login` or `/auth/register`, the interceptor calls `authService.logout()` (clears localStorage) and redirects to `/login`. Auth endpoint 401s (wrong password, etc.) are passed through as normal errors for the form to display.
 
 ### Routing
 
 ```typescript
-{ path: '', canActivate: [AuthGuard], children: [ ...existing routes ] },
 { path: 'login',    component: LoginComponent },
 { path: 'register', component: RegisterComponent },
+{ path: '', canActivate: [AuthGuard], canActivateChild: [AuthGuard], children: [ ...existing routes ] },
 ```
+
+`canActivateChild` is required in case any child route becomes lazy-loaded.
+
+Authenticated users navigating to `/login` or `/register` are redirected to `/`.
 
 ### User flow
 
 ```
-App opens → AuthGuard checks localStorage token
-  ├─ valid token   → Dashboard
-  └─ no token      → /login
+App opens → AuthGuard checks token (presence + exp)
+  ├─ valid   → Dashboard
+  └─ invalid → /login
         ├─ login OK    → store token → Dashboard
         └─ no account  → /register  → store token → Dashboard
+
+Any non-auth API call → 401 → logout() → /login
 ```
 
 ### Style
@@ -116,7 +201,7 @@ Login and register pages use the same design system as the rest of the app:
 - Card: `var(--surface)`, `var(--border)`
 - Inputs: custom styled (no `mat-form-field`)
 - Submit: FAB-style fixed button at bottom (`var(--primary)`)
-- Typography: same font tokens, tabular nums on inputs
+- Typography: same font tokens
 
 ---
 
@@ -126,7 +211,9 @@ Login and register pages use the same design system as the rest of the app:
 ng add @angular/pwa
 ```
 
-### `manifest.webmanifest`
+`ng add @angular/pwa` auto-generates `manifest.webmanifest` with icons, `ngsw-config.json`, and injects meta tags into `index.html`. After generation, update manifest fields:
+
+### `manifest.webmanifest` (update generated file)
 
 ```json
 {
@@ -135,15 +222,22 @@ ng add @angular/pwa
   "theme_color": "#4CAF50",
   "background_color": "#F5F5F5",
   "display": "standalone",
-  "start_url": "/"
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    { "src": "icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
 }
 ```
+
+Icons are generated by `ng add @angular/pwa`. Replace with branded versions if desired.
 
 ### `ngsw-config.json` caching strategy
 
 - Angular shell (JS/CSS): `performance` (cache-first)
 - Static assets (icons, fonts): `performance`
-- API calls (`/api/**`): not cached (always fresh data)
+- API calls: not cached (always fresh data)
 
 ### `environment.prod.ts`
 
@@ -153,6 +247,14 @@ export const environment = {
   apiUrl: 'https://foodybud-api.onrender.com'
 };
 ```
+
+### Security note
+
+JWT tokens stored in `localStorage` are accessible to any JS on the page (XSS risk). For a single-user personal app this is accepted risk. Mitigations in scope: a strict Content Security Policy via Netlify `_headers` restricting script-src. Mitigation out of scope for now: httpOnly cookies (requires `credentials: true` on CORS, already set, so can be added later as an upgrade path).
+
+### Cold start UX
+
+Render free tier cold starts (~30-50s) affect the first request after inactivity. The Angular app must show a loading indicator during API calls (spinner or skeleton) so the user does not perceive a broken app.
 
 ### Install experience
 
@@ -165,34 +267,33 @@ export const environment = {
 ## 5. Deployment Flow (one-time setup)
 
 ### Step 1 — Neon
-1. Create project at neon.tech
-2. Copy the `DATABASE_URL` (SSL included)
+1. Create project at neon.tech → copy the `DATABASE_URL` (SSL included)
 
 ### Step 2 — Render
 1. Connect GitHub repo → select `mfp-backend`
-2. Build: `npm install && npm run build`
-3. Start: auto-read from `Procfile` (`node dist/main.js`)
-4. Environment variables:
+2. Build command: `npm install && npm run build`
+3. Start command: auto-read from `Procfile` (`node dist/main.js`)
+4. Environment variables — add **only these 4**, never add `PORT` (Render injects it automatically; setting it manually breaks the deployment):
    ```
    DATABASE_URL=<neon_url>
-   JWT_SECRET=<long_random_string>
+   JWT_SECRET=<32+ char random string>
    NODE_ENV=production
    FRONTEND_URL=https://foodybud.netlify.app
-   PORT=3000
    ```
 
 ### Step 3 — Netlify
 1. Connect GitHub repo → select `mfp-frontend`
-2. Build: `npm run build`
+2. Build command: `npm run build`
 3. Publish directory: `dist/mfp-frontend/browser`
-4. Add `public/_redirects`: `/* /index.html 200`
+4. Add `mfp-frontend/public/_redirects`: `/* /index.html 200`
+5. Add `mfp-frontend/public/_headers` with CSP (see security note above)
 
 ---
 
 ## Out of scope (future)
 
-- Refresh tokens
+- Refresh tokens (CORS `credentials: true` is already set in anticipation)
 - OAuth / social login
 - Push notifications
 - Keep-alive ping for Render cold start
-- Multi-tenant data isolation beyond userId filtering
+- TypeORM query interceptor for automatic userId injection
