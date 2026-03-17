@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { FoodsModule } from './foods/foods.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MealsModule } from './meals/meals.module';
@@ -12,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
+  controllers: [AppController],
   imports: [
     FoodsModule,
     RecipesModule,
@@ -37,6 +40,6 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
       inject: [ConfigService],
     }),
   ],
-  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
+  providers: [AppService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class AppModule {}
