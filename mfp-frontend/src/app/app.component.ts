@@ -3,6 +3,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
+import { environment } from '../environments/environment';
 
 const AUTH_ROUTES = ['/login', '/register'];
 
@@ -123,5 +124,8 @@ export class AppComponent {
     ).subscribe((e) => {
       this.showNav.set(!AUTH_ROUTES.some(r => e.urlAfterRedirects.startsWith(r)));
     });
+
+    // Pre-warm Render backend (free tier sleeps after 15min inactivity)
+    fetch(`${environment.apiUrl}/health`).catch(() => {});
   }
 }
