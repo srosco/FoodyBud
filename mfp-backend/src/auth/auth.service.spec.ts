@@ -54,4 +54,9 @@ describe('AuthService', () => {
     users.findByEmail.mockResolvedValue({ id: 'u1', email: 'a@b.com', passwordHash: hash } as any);
     await expect(service.login('a@b.com', 'wrong')).rejects.toThrow();
   });
+
+  it('login() throws UnauthorizedException for unknown email', async () => {
+    users.findByEmail.mockResolvedValue(null);
+    await expect(service.login('unknown@b.com', 'password123')).rejects.toThrow('Invalid credentials');
+  });
 });
