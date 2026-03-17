@@ -28,7 +28,9 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/manifest.webmanifest"
+              "src/manifest.webmanifest",
+              { "glob": "_redirects", "input": "src", "output": "/" },
+              { "glob": "_headers", "input": "src", "output": "/" }
             ],
             "styles": [
               "src/theme.scss",
@@ -38,6 +40,12 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
