@@ -26,7 +26,7 @@ describe('FoodsService', () => {
 
   it('search() excludes soft-deleted foods', async () => {
     repo.find.mockResolvedValue([]);
-    await service.search('test');
+    await service.search('user-1', 'test');
     expect(repo.find).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.arrayContaining([
@@ -40,7 +40,7 @@ describe('FoodsService', () => {
     const food = Object.assign(new Food(), { id: '1', deletedAt: null });
     repo.findOne.mockResolvedValue(food);
     repo.save.mockImplementation((f: Food) => Promise.resolve(f));
-    const result = await service.softDelete('1');
+    const result = await service.softDelete('1', 'user-1');
     expect(result.deletedAt).not.toBeNull();
   });
 });

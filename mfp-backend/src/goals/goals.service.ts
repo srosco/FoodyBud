@@ -10,17 +10,17 @@ export class GoalsService {
     @InjectRepository(Goal) private readonly repo: Repository<Goal>,
   ) {}
 
-  async get(): Promise<Goal> {
-    let goal = await this.repo.findOne({ where: { singleton: true } });
+  async get(userId: string): Promise<Goal> {
+    let goal = await this.repo.findOne({ where: { userId } });
     if (!goal) {
-      goal = this.repo.create({ singleton: true });
+      goal = this.repo.create({ userId });
       await this.repo.save(goal);
     }
     return goal;
   }
 
-  async upsert(dto: UpdateGoalsDto): Promise<Goal> {
-    const goal = await this.get();
+  async upsert(userId: string, dto: UpdateGoalsDto): Promise<Goal> {
+    const goal = await this.get(userId);
     return this.repo.save({ ...goal, ...dto });
   }
 }

@@ -15,15 +15,15 @@ export class MealsService {
     @InjectRepository(Recipe) private readonly recipeRepo: Repository<Recipe>,
   ) {}
 
-  findByDate(date: string): Promise<Meal[]> {
-    return this.mealRepo.find({ where: { date } });
+  findByDate(userId: string, date: string): Promise<Meal[]> {
+    return this.mealRepo.find({ where: { date, userId } });
   }
 
-  findOne(id: string): Promise<Meal | null> {
-    return this.mealRepo.findOne({ where: { id } });
+  findOne(id: string, userId: string): Promise<Meal | null> {
+    return this.mealRepo.findOne({ where: { id, userId } });
   }
 
-  async create(dto: CreateMealDto): Promise<Meal> {
+  async create(dto: CreateMealDto, userId: string): Promise<Meal> {
     dto.items.forEach((item) => this.validateXor(item));
     const items = await this.resolveItems(dto.items);
     const meal = this.mealRepo.create({
@@ -31,12 +31,13 @@ export class MealsService {
       date: dto.date,
       mealType: dto.mealType as any,
       items,
+      userId,
     });
     return this.mealRepo.save(meal);
   }
 
-  async update(id: string, dto: Partial<CreateMealDto>): Promise<Meal> {
-    const meal = await this.findOne(id);
+  async update(id: string, dto: Partial<CreateMealDto>, userId: string): Promise<Meal> {
+    const meal = await this.findOne(id, userId);
     if (!meal) throw new NotFoundException(`Meal ${id} not found`);
     if (dto.items) {
       dto.items.forEach((item) => this.validateXor(item));
@@ -48,8 +49,8 @@ export class MealsService {
     return this.mealRepo.save(meal);
   }
 
-  async remove(id: string): Promise<void> {
-    const meal = await this.findOne(id);
+  async remove(id: string, userId: string): Promise<void> {
+    const meal = await this.findOne(id, userId);
     if (!meal) throw new NotFoundException(`Meal ${id} not found`);
     await this.mealRepo.remove(meal);
   }

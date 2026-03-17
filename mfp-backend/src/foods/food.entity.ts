@@ -1,6 +1,8 @@
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
+  ManyToOne, JoinColumn,
 } from 'typeorm';
+import { User } from '../users/user.entity';
 
 @Entity('foods')
 export class Food {
@@ -51,4 +53,11 @@ export class Food {
 
   @Column({ type: 'timestamp', nullable: true, name: 'deleted_at' })
   deletedAt: Date | null;
+
+  @Column({ name: 'user_id', nullable: false })
+  userId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 }

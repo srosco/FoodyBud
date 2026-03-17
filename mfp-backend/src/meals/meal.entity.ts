@@ -1,7 +1,8 @@
 import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany,
+  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, ManyToOne, JoinColumn,
 } from 'typeorm';
 import { MealItem } from './meal-item.entity';
+import { User } from '../users/user.entity';
 
 export type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
 
@@ -18,6 +19,13 @@ export class Meal {
 
   @Column({ type: 'varchar', name: 'meal_type' })
   mealType: MealType;
+
+  @Column({ name: 'user_id', nullable: false })
+  userId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @CreateDateColumn()
   createdAt: Date;

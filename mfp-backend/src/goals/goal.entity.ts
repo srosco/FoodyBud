@@ -1,13 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import { User } from '../users/user.entity';
 
 @Entity('goals')
+@Unique(['userId'])   // one goal per user
 export class Goal {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // Singleton enforcement: only one row allowed
-  @Column({ type: 'boolean', default: true, unique: true })
-  singleton: boolean;
+  @Column({ name: 'user_id', nullable: false })
+  userId: string;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @Column({ type: 'float', default: 2000 })
   calories: number;

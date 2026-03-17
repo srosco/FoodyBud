@@ -17,10 +17,10 @@ export class SummaryService {
     private readonly recipesService: RecipesService,
   ) {}
 
-  async getSummary(date: string) {
-    const meals = await this.mealRepo.find({ where: { date } });
-    const activities = await this.activityRepo.find({ where: { date } });
-    const goal = await this.goalRepo.findOne({ where: { singleton: true } });
+  async getSummary(userId: string, date: string) {
+    const meals = await this.mealRepo.find({ where: { date, userId } });
+    const activities = await this.activityRepo.find({ where: { date, userId } });
+    const goal = await this.goalRepo.findOne({ where: { userId } });
 
     const totals = EMPTY_TOTALS();
     const byMealType: Record<MealTypeKey, NutriTotals> = {

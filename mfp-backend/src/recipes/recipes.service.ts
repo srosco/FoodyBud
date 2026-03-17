@@ -17,26 +17,27 @@ export class RecipesService {
     @InjectRepository(Food) private readonly foodRepo: Repository<Food>,
   ) {}
 
-  findAll(): Promise<Recipe[]> {
-    return this.recipeRepo.find({ where: { deletedAt: IsNull() } });
+  findAll(userId: string): Promise<Recipe[]> {
+    return this.recipeRepo.find({ where: { deletedAt: IsNull(), userId } });
   }
 
-  findOne(id: string): Promise<Recipe | null> {
-    return this.recipeRepo.findOne({ where: { id, deletedAt: IsNull() } });
+  findOne(id: string, userId: string): Promise<Recipe | null> {
+    return this.recipeRepo.findOne({ where: { id, userId, deletedAt: IsNull() } });
   }
 
-  async create(dto: CreateRecipeDto): Promise<Recipe> {
+  async create(dto: CreateRecipeDto, userId: string): Promise<Recipe> {
     const items = await this.resolveItems(dto.items);
     const recipe = this.recipeRepo.create({
       name: dto.name,
       totalWeightG: dto.totalWeightG,
+      userId,
       items,
     });
     return this.recipeRepo.save(recipe);
   }
 
-  async update(id: string, dto: UpdateRecipeDto): Promise<Recipe> {
-    const recipe = await this.findOne(id);
+  async update(id: string, dto: UpdateRecipeDto, userId: string): Promise<Recipe> {
+    const recipe = await this.findOne(id, userId);
     if (!recipe) throw new NotFoundException(`Recipe ${id} not found`);
     if (dto.name !== undefined) recipe.name = dto.name;
     if (dto.totalWeightG !== undefined) recipe.totalWeightG = dto.totalWeightG;
@@ -46,8 +47,8 @@ export class RecipesService {
     return this.recipeRepo.save(recipe);
   }
 
-  async softDelete(id: string): Promise<Recipe> {
-    const recipe = await this.findOne(id);
+  async softDelete(id: string, userId: string): Promise<Recipe> {
+    const recipe = await this.findOne(id, userId);
     if (!recipe) throw new NotFoundException(`Recipe ${id} not found`);
     recipe.deletedAt = new Date();
     return this.recipeRepo.save(recipe);

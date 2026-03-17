@@ -12,38 +12,38 @@ export class FoodsService {
     private readonly repo: Repository<Food>,
   ) {}
 
-  async search(query?: string): Promise<Food[]> {
+  async search(userId: string, query?: string): Promise<Food[]> {
     if (!query) {
-      return this.repo.find({ where: { deletedAt: IsNull() } });
+      return this.repo.find({ where: { deletedAt: IsNull(), userId } });
     }
 
     const isNumeric = /^\d+$/.test(query);
     const conditions: object[] = [
-      { name: ILike(`%${query}%`), deletedAt: IsNull() },
+      { name: ILike(`%${query}%`), deletedAt: IsNull(), userId },
     ];
     if (isNumeric) {
-      conditions.push({ barcode: query, deletedAt: IsNull() });
+      conditions.push({ barcode: query, deletedAt: IsNull(), userId });
     }
 
     return this.repo.find({ where: conditions });
   }
 
-  findOne(id: string): Promise<Food | null> {
-    return this.repo.findOne({ where: { id, deletedAt: IsNull() } });
+  findOne(id: string, userId: string): Promise<Food | null> {
+    return this.repo.findOne({ where: { id, deletedAt: IsNull(), userId } });
   }
 
-  create(dto: CreateFoodDto): Promise<Food> {
-    return this.repo.save(this.repo.create(dto));
+  create(dto: CreateFoodDto, userId: string): Promise<Food> {
+    return this.repo.save(this.repo.create({ ...dto, userId }));
   }
 
-  async update(id: string, dto: UpdateFoodDto): Promise<Food> {
-    const food = await this.findOne(id);
+  async update(id: string, dto: UpdateFoodDto, userId: string): Promise<Food> {
+    const food = await this.findOne(id, userId);
     if (!food) throw new NotFoundException(`Food ${id} not found`);
     return this.repo.save({ ...food, ...dto });
   }
 
-  async softDelete(id: string): Promise<Food> {
-    const food = await this.findOne(id);  // uses IsNull() filter
+  async softDelete(id: string, userId: string): Promise<Food> {
+    const food = await this.findOne(id, userId);
     if (!food) throw new NotFoundException(`Food ${id} not found`);
     food.deletedAt = new Date();
     return this.repo.save(food);
