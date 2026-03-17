@@ -33,6 +33,7 @@
               { "glob": "_headers", "input": "src", "output": "/" }
             ],
             "styles": [
+              "node_modules/@fontsource/material-icons/index.css",
               "src/theme.scss",
               "src/styles.scss"
             ],

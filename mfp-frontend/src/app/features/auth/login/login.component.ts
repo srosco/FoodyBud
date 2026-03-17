@@ -33,20 +33,17 @@ import { MatIconModule } from '@angular/material/icon';
           <p class="auth-error">{{ error() }}</p>
         }
 
-        <p class="auth-link">Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
-      </form>
-
-      <div class="fab-wrap">
-        <button class="fab-btn" type="button" [disabled]="form.invalid || loading()"
-                (click)="onSubmit()">
+        <button class="submit-btn" type="submit" [disabled]="form.invalid || loading()">
           <mat-icon>login</mat-icon>
           {{ loading() ? 'Connexion...' : 'Se connecter' }}
         </button>
-      </div>
+
+        <p class="auth-link">Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
+      </form>
     </div>
   `,
   styles: [`
-    .auth-page { min-height: 100dvh; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 48px 16px 100px; }
+    .auth-page { min-height: 100dvh; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 48px 16px 48px; }
     .auth-header { text-align: center; margin-bottom: 32px; }
     .brand-icon { font-size: 48px; width: 48px; height: 48px; color: var(--primary); }
     .brand-name { font-size: 28px; font-weight: 700; color: var(--font); margin: 8px 0 4px; }
@@ -57,11 +54,10 @@ import { MatIconModule } from '@angular/material/icon';
     .field-input { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 15px; color: var(--font); outline: none; width: 100%; box-sizing: border-box; }
     .field-input:focus { border-color: var(--primary); }
     .auth-error { color: #E84040; font-size: 13px; margin: 0; text-align: center; }
+    .submit-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: #fff; border: none; border-radius: 28px; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,0.12); transition: opacity 0.18s; }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .auth-link { font-size: 13px; color: var(--text-3); text-align: center; margin: 0; }
     .auth-link a { color: var(--primary); text-decoration: none; font-weight: 500; }
-    .fab-wrap { position: fixed; bottom: 24px; left: 0; right: 0; display: flex; justify-content: center; padding: 0 16px; }
-    .fab-btn { display: flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; border: none; border-radius: 28px; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
-    .fab-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   `],
 })
 export class LoginComponent {

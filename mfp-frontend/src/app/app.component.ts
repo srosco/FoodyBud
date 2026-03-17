@@ -1,39 +1,44 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, signal, inject } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
+
+const AUTH_ROUTES = ['/login', '/register'];
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, MatIconModule, CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <main class="content">
+    <main class="content" [class.no-nav]="!showNav()">
       <router-outlet />
     </main>
 
-    <nav class="bottom-nav">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
-        <span class="nav-icon"><mat-icon>home</mat-icon></span>
-        <span class="nav-label">Journal</span>
-      </a>
-      <a routerLink="/journal" routerLinkActive="active">
-        <span class="nav-icon"><mat-icon>calendar_month</mat-icon></span>
-        <span class="nav-label">Calendrier</span>
-      </a>
-      <a routerLink="/aliments" routerLinkActive="active">
-        <span class="nav-icon"><mat-icon>restaurant</mat-icon></span>
-        <span class="nav-label">Aliments</span>
-      </a>
-      <a routerLink="/recettes" routerLinkActive="active">
-        <span class="nav-icon"><mat-icon>menu_book</mat-icon></span>
-        <span class="nav-label">Recettes</span>
-      </a>
-      <a routerLink="/objectifs" routerLinkActive="active">
-        <span class="nav-icon"><mat-icon>flag</mat-icon></span>
-        <span class="nav-label">Objectifs</span>
-      </a>
-    </nav>
+    @if (showNav()) {
+      <nav class="bottom-nav">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+          <span class="nav-icon"><mat-icon>home</mat-icon></span>
+          <span class="nav-label">Journal</span>
+        </a>
+        <a routerLink="/journal" routerLinkActive="active">
+          <span class="nav-icon"><mat-icon>calendar_month</mat-icon></span>
+          <span class="nav-label">Calendrier</span>
+        </a>
+        <a routerLink="/aliments" routerLinkActive="active">
+          <span class="nav-icon"><mat-icon>restaurant</mat-icon></span>
+          <span class="nav-label">Aliments</span>
+        </a>
+        <a routerLink="/recettes" routerLinkActive="active">
+          <span class="nav-icon"><mat-icon>menu_book</mat-icon></span>
+          <span class="nav-label">Recettes</span>
+        </a>
+        <a routerLink="/objectifs" routerLinkActive="active">
+          <span class="nav-icon"><mat-icon>flag</mat-icon></span>
+          <span class="nav-label">Objectifs</span>
+        </a>
+      </nav>
+    }
   `,
   styles: [`
     :host {
@@ -45,6 +50,9 @@ import { CommonModule } from '@angular/common';
       flex: 1;
       overflow-y: auto;
       padding-bottom: var(--nav-h, 64px);
+    }
+    .content.no-nav {
+      padding-bottom: 0;
     }
     .bottom-nav {
       position: fixed;
@@ -105,4 +113,15 @@ import { CommonModule } from '@angular/common';
     }
   `],
 })
-export class AppComponent {}
+export class AppComponent {
+  private router = inject(Router);
+  showNav = signal(false);
+
+  constructor() {
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+    ).subscribe((e) => {
+      this.showNav.set(!AUTH_ROUTES.some(r => e.urlAfterRedirects.startsWith(r)));
+    });
+  }
+}
