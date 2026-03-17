@@ -63,9 +63,11 @@ app-root {
   background-color: var(--bg);
 }
 
-/* ─── Material Icons ligature class (required by mat-icon) ─── */
-.material-icons {
-  font-family: 'Material Icons';
+/* ─── Material Icons — force font on mat-icon element directly ─── */
+.material-icons,
+mat-icon,
+.mat-icon {
+  font-family: 'Material Icons' !important;
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -76,8 +78,8 @@ app-root {
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
-  font-feature-settings: 'liga';
-  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga' !important;
+  -webkit-font-feature-settings: 'liga' !important;
   -webkit-font-smoothing: antialiased;
 }
 
