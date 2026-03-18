@@ -49,8 +49,13 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
         }
 
         <button class="submit-btn" type="submit" [disabled]="form.invalid || loading()">
-          <mat-icon>person_add</mat-icon>
-          {{ loading() ? 'Création...' : "S'inscrire" }}
+          @if (loading()) {
+            <span class="btn-spinner"></span>
+            Création…
+          } @else {
+            <mat-icon>person_add</mat-icon>
+            S'inscrire
+          }
         </button>
 
         <p class="auth-link">Déjà un compte ? <a routerLink="/login">Se connecter</a></p>

@@ -14,10 +14,46 @@
   </div>
 
   @if (loading()) {
-    <div class="page-loading"><div class="page-spinner"></div></div>
+    <!-- Skeleton: ring -->
+    <div class="ring-section sk-ring-section">
+      <div class="sk sk-circle"></div>
+      <div class="sk-ring-aside">
+        <div class="sk sk-ring-val"></div>
+        <div class="sk sk-ring-lbl"></div>
+      </div>
+    </div>
+    <!-- Skeleton: macros -->
+    <div class="card sk-macros-card">
+      <div class="sk-macro-row" *ngFor="let r of [1,2,3,4]">
+        <div class="sk sk-mac-label"></div>
+        <div class="sk sk-mac-bar"></div>
+        <div class="sk sk-mac-val"></div>
+      </div>
+    </div>
+    <!-- Skeleton: meal cards -->
+    <div class="sk sk-section-lbl"></div>
+    <div class="sk-meal-card" *ngFor="let c of [1,2,3,4]">
+      <div class="sk-meal-hd">
+        <div class="sk sk-meal-icon"></div>
+        <div class="sk-meal-body">
+          <div class="sk sk-meal-name"></div>
+          <div class="sk-pills-row">
+            <div class="sk sk-pill"></div>
+            <div class="sk sk-pill"></div>
+            <div class="sk sk-pill"></div>
+          </div>
+        </div>
+        <div class="sk-meal-kcal-col">
+          <div class="sk sk-kcal-val"></div>
+          <div class="sk sk-kcal-lbl"></div>
+        </div>
+      </div>
+      <div class="sk-divider"></div>
+      <div class="sk sk-add-btn"></div>
+    </div>
   }
 
-  <ng-container *ngIf="summary() as s">
+  <ng-container *ngIf="!loading() && summary() as s">
 
     <!-- Calories ring -->
     <div class="ring-section">

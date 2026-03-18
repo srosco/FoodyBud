@@ -193,8 +193,9 @@ mat-icon,
 .mat-mdc-option { color: var(--text) !important; font-family: var(--font) !important; }
 .mat-mdc-option.mdc-list-item--selected { background-color: var(--primary-light) !important; }
 
-/* ─── Loading spinners ─── */
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ─── Animations ─── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
 
 /* Inline button spinner (white, for dark buttons) */
 .btn-spinner {
@@ -208,20 +209,13 @@ mat-icon,
   display: inline-block;
 }
 
-/* Full-page / section loading indicator */
-.page-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 30vh;
-}
-.page-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
+/* ─── Skeleton shimmer base ─── */
+.sk {
+  display: block;
+  background: linear-gradient(90deg, #dde6e2 25%, #edf3ef 50%, #dde6e2 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 8px;
 }
 
 /* ─── Layout helpers ─── */

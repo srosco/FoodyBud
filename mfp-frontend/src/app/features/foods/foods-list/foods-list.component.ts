@@ -35,9 +35,23 @@ import { debounceTime, distinctUntilChanged, Subject, switchMap, startWith } fro
         </button>
       </div>
 
-      <!-- Loading state -->
-      <div class="page-loading" *ngIf="loading()">
-        <div class="page-spinner"></div>
+      <!-- Skeleton rows -->
+      <div class="food-list" *ngIf="loading()">
+        <div class="food-row sk-food-row" *ngFor="let i of [1,2,3,4,5,6]">
+          <div class="sk sk-fi"></div>
+          <div class="sk-fi-info">
+            <div class="sk sk-fi-name"></div>
+            <div class="sk-fi-pills">
+              <div class="sk sk-fi-pill"></div>
+              <div class="sk sk-fi-pill"></div>
+              <div class="sk sk-fi-pill"></div>
+            </div>
+          </div>
+          <div class="sk-fi-kcal">
+            <div class="sk sk-fi-kval"></div>
+            <div class="sk sk-fi-klbl"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Food list -->
@@ -291,6 +305,17 @@ import { debounceTime, distinctUntilChanged, Subject, switchMap, startWith } fro
       margin: 0;
       line-height: 1.5;
     }
+
+    /* Skeleton food rows */
+    .sk-food-row { pointer-events: none; }
+    .sk-fi { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; }
+    .sk-fi-info { flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+    .sk-fi-name { width: 55%; height: 12px; border-radius: 4px; }
+    .sk-fi-pills { display: flex; gap: 4px; }
+    .sk-fi-pill { width: 30px; height: 14px; border-radius: 99px; }
+    .sk-fi-kcal { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .sk-fi-kval { width: 28px; height: 18px; border-radius: 4px; }
+    .sk-fi-klbl { width: 20px; height: 9px; border-radius: 3px; }
 
     /* FAB */
     .fab-wrap {

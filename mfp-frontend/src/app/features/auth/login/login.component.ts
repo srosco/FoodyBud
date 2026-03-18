@@ -34,8 +34,13 @@ import { MatIconModule } from '@angular/material/icon';
         }
 
         <button class="submit-btn" type="submit" [disabled]="form.invalid || loading()">
-          <mat-icon>login</mat-icon>
-          {{ loading() ? 'Connexion...' : 'Se connecter' }}
+          @if (loading()) {
+            <span class="btn-spinner"></span>
+            Connexion…
+          } @else {
+            <mat-icon>login</mat-icon>
+            Se connecter
+          }
         </button>
 
         <p class="auth-link">Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>

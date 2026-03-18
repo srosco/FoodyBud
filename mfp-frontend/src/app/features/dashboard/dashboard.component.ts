@@ -18,6 +18,35 @@ import type { Summary } from '../../core/models/summary.model';
   styles: [`
     .dashboard { background: var(--bg); min-height: 100%; }
 
+    /* ── Skeleton shapes ── */
+    .sk-ring-section { display: flex; align-items: center; justify-content: center; gap: 28px; }
+    .sk-circle { width: 140px; height: 140px; border-radius: 50%; flex-shrink: 0; }
+    .sk-ring-aside { display: flex; flex-direction: column; gap: 10px; }
+    .sk-ring-val { width: 72px; height: 28px; border-radius: 6px; }
+    .sk-ring-lbl { width: 52px; height: 12px; border-radius: 4px; }
+
+    .sk-macros-card { display: flex; flex-direction: column; gap: 0; }
+    .sk-macro-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .sk-macro-row:last-child { border-bottom: none; }
+    .sk-mac-label { width: 68px; height: 11px; border-radius: 4px; flex-shrink: 0; }
+    .sk-mac-bar { flex: 1; height: 8px; border-radius: 4px; }
+    .sk-mac-val { width: 32px; height: 11px; border-radius: 4px; flex-shrink: 0; }
+
+    .sk-section-lbl { width: 44px; height: 13px; border-radius: 4px; margin: 14px 0 8px; }
+
+    .sk-meal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 8px; }
+    .sk-meal-hd { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+    .sk-meal-icon { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; }
+    .sk-meal-body { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .sk-meal-name { width: 80px; height: 12px; border-radius: 4px; }
+    .sk-pills-row { display: flex; gap: 4px; }
+    .sk-pill { width: 32px; height: 16px; border-radius: 99px; }
+    .sk-meal-kcal-col { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .sk-kcal-val { width: 28px; height: 18px; border-radius: 4px; }
+    .sk-kcal-lbl { width: 22px; height: 9px; border-radius: 3px; }
+    .sk-divider { height: 1px; background: var(--border); margin: 0 14px; }
+    .sk-add-btn { width: 80px; height: 13px; border-radius: 4px; margin: 12px 14px; }
+
     .date-nav {
       display: flex;
       align-items: center;
