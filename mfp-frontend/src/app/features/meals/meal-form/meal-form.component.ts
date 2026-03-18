@@ -94,11 +94,16 @@ import { FoodPickerComponent, FoodPickerResult } from '../../../shared/component
     <div class="fab-wrap">
       <button
         mat-fab extended color="primary"
-        [disabled]="form.invalid || items.length === 0"
+        [disabled]="form.invalid || items.length === 0 || loading"
         (click)="onSubmit()"
       >
-        <mat-icon>check</mat-icon>
-        {{ submitLabel }}
+        @if (loading) {
+          <span class="btn-spinner"></span>
+          Enregistrement…
+        } @else {
+          <mat-icon>check</mat-icon>
+          {{ submitLabel }}
+        }
       </button>
     </div>
   `,
@@ -353,7 +358,9 @@ import { FoodPickerComponent, FoodPickerResult } from '../../../shared/component
 export class MealFormComponent implements OnInit {
   @Input() initialData?: any;
   @Input() defaultDate?: string;
+  @Input() defaultMealType?: string;
   @Input() submitLabel = 'Enregistrer';
+  @Input() loading = false;
   @Output() submitted = new EventEmitter<any>();
 
   private fb = inject(FormBuilder);
@@ -382,8 +389,9 @@ export class MealFormComponent implements OnInit {
         recipe: i.recipe ?? null,
         quantityG: i.quantityG,
       }));
-    } else if (this.defaultDate) {
-      this.form.patchValue({ date: this.defaultDate });
+    } else {
+      if (this.defaultDate) this.form.patchValue({ date: this.defaultDate });
+      if (this.defaultMealType) this.form.patchValue({ mealType: this.defaultMealType });
     }
   }
 

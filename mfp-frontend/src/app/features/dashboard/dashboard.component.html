@@ -13,6 +13,10 @@
     </button>
   </div>
 
+  @if (loading()) {
+    <div class="page-loading"><div class="page-spinner"></div></div>
+  }
+
   <ng-container *ngIf="summary() as s">
 
     <!-- Calories ring -->

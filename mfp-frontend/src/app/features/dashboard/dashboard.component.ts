@@ -173,6 +173,7 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
 
   summary = signal<Summary | null>(null);
+  loading = signal(true);
   today = new Date().toISOString().split('T')[0];
   currentDate = signal<string>(this.today);
   fabOpen = signal(false);
@@ -197,7 +198,11 @@ export class DashboardComponent implements OnInit {
   }
 
   load(date: string) {
-    this.summaryService.get(date).subscribe((s) => this.summary.set(s));
+    this.loading.set(true);
+    this.summaryService.get(date).subscribe((s) => {
+      this.summary.set(s);
+      this.loading.set(false);
+    });
   }
 
   addMeal() {

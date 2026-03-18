@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { MealsService } from '../../../core/services/meals.service';
@@ -17,7 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
         </button>
         <span class="page-title">Nouveau repas</span>
       </div>
-      <app-meal-form submitLabel="Créer le repas" [defaultDate]="defaultDate" (submitted)="onCreate($event)" />
+      <app-meal-form submitLabel="Créer le repas" [defaultDate]="defaultDate" [defaultMealType]="defaultMealType" [loading]="loading()" (submitted)="onCreate($event)" />
     </div>
   `,
   styles: [`
@@ -64,8 +64,14 @@ export class MealCreateComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   defaultDate = this.route.snapshot.queryParamMap.get('date') ?? new Date().toISOString().split('T')[0];
+  defaultMealType = this.route.snapshot.queryParamMap.get('mealType') ?? 'LUNCH';
+  loading = signal(false);
 
   onCreate(data: any) {
-    this.mealsService.create(data).subscribe(() => this.router.navigate(['/']));
+    this.loading.set(true);
+    this.mealsService.create(data).subscribe({
+      next: () => this.router.navigate(['/']),
+      error: () => this.loading.set(false),
+    });
   }
 }

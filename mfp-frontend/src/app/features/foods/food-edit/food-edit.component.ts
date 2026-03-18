@@ -21,7 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
           <mat-icon>delete_outline</mat-icon>
         </button>
       </div>
-      <app-food-form *ngIf="food()" [initialData]="food()!" submitLabel="Enregistrer" (submitted)="onUpdate($event)" />
+      <app-food-form *ngIf="food()" [initialData]="food()!" submitLabel="Enregistrer" [loading]="saving()" (submitted)="onUpdate($event)" />
     </div>
   `,
   styles: [`
@@ -84,6 +84,7 @@ export class FoodEditComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   food = signal<Food | null>(null);
+  saving = signal(false);
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -92,7 +93,11 @@ export class FoodEditComponent implements OnInit {
 
   onUpdate(data: Partial<Food>) {
     const id = this.route.snapshot.paramMap.get('id')!;
-    this.foodsService.update(id, data).subscribe(() => this.router.navigate(['/aliments']));
+    this.saving.set(true);
+    this.foodsService.update(id, data).subscribe({
+      next: () => this.router.navigate(['/aliments']),
+      error: () => this.saving.set(false),
+    });
   }
 
   onDelete() {

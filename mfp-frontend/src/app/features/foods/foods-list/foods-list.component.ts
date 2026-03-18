@@ -35,8 +35,13 @@ import { debounceTime, distinctUntilChanged, Subject, switchMap, startWith } fro
         </button>
       </div>
 
+      <!-- Loading state -->
+      <div class="page-loading" *ngIf="loading()">
+        <div class="page-spinner"></div>
+      </div>
+
       <!-- Food list -->
-      <div class="food-list" *ngIf="foods().length > 0">
+      <div class="food-list" *ngIf="foods().length > 0 && !loading()">
         <div class="food-row" *ngFor="let food of foods()" (click)="router.navigate(['/aliments', food.id, 'edit'])">
           <div class="food-icon">
             <mat-icon>nutrition</mat-icon>
@@ -58,13 +63,13 @@ import { debounceTime, distinctUntilChanged, Subject, switchMap, startWith } fro
       </div>
 
       <!-- Empty search state -->
-      <div class="empty-state" *ngIf="foods().length === 0 && searchQuery">
+      <div class="empty-state" *ngIf="foods().length === 0 && searchQuery && !loading()">
         <mat-icon>search_off</mat-icon>
         <p>Aucun aliment trouvé<br>pour « {{ searchQuery }} »</p>
       </div>
 
       <!-- Empty initial state -->
-      <div class="empty-state" *ngIf="foods().length === 0 && !searchQuery">
+      <div class="empty-state" *ngIf="foods().length === 0 && !searchQuery && !loading()">
         <mat-icon>restaurant_menu</mat-icon>
         <p>Aucun aliment encore.<br>Crée le premier !</p>
       </div>
@@ -301,6 +306,7 @@ export class FoodsListComponent implements OnInit {
   router = inject(Router);
   private foodsService = inject(FoodsService);
   foods = signal<Food[]>([]);
+  loading = signal(true);
   searchQuery = '';
   private search$ = new Subject<string>();
 
@@ -310,9 +316,12 @@ export class FoodsListComponent implements OnInit {
       debounceTime(300),
       distinctUntilChanged(),
       switchMap((q) => this.foodsService.search(q)),
-    ).subscribe((foods) => this.foods.set(foods));
+    ).subscribe((foods) => {
+      this.foods.set(foods);
+      this.loading.set(false);
+    });
   }
 
-  onSearch(query: string) { this.search$.next(query); }
+  onSearch(query: string) { this.loading.set(true); this.search$.next(query); }
   clearSearch() { this.searchQuery = ''; this.search$.next(''); }
 }

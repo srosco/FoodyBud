@@ -49,7 +49,7 @@ import { NutriMap, Meal } from '../../../../core/models/meal.model';
       <div class="divider"></div>
       <button
         class="add-row"
-        (click)="router.navigate(['/repas/nouveau'], { queryParams: { date: currentDate } })"
+        (click)="router.navigate(['/repas/nouveau'], { queryParams: { date: currentDate, mealType: mealTypeKey } })"
       >
         <mat-icon>add</mat-icon>
         <span>Ajouter</span>

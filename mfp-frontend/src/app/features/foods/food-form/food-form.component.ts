@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgFor } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -81,8 +81,13 @@ import { Food } from '../../../core/models/food.model';
       </div>
 
       <!-- Submit -->
-      <button class="submit-btn" type="submit" [disabled]="form.invalid">
-        {{ submitLabel }}
+      <button class="submit-btn" type="submit" [disabled]="form.invalid || loading">
+        @if (loading) {
+          <span class="btn-spinner"></span>
+          Enregistrement…
+        } @else {
+          {{ submitLabel }}
+        }
       </button>
 
     </form>
@@ -310,6 +315,7 @@ import { Food } from '../../../core/models/food.model';
 export class FoodFormComponent implements OnInit {
   @Input() initialData?: Partial<Food>;
   @Input() submitLabel = 'Enregistrer';
+  @Input() loading = false;
   @Output() submitted = new EventEmitter<Partial<Food>>();
 
   private fb = inject(FormBuilder);

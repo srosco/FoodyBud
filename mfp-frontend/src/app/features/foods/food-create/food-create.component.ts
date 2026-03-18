@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FoodsService } from '../../../core/services/foods.service';
@@ -18,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
         </button>
         <span class="page-title">Nouvel aliment</span>
       </div>
-      <app-food-form submitLabel="Créer l'aliment" (submitted)="onCreate($event)" />
+      <app-food-form submitLabel="Créer l'aliment" [loading]="loading()" (submitted)="onCreate($event)" />
     </div>
   `,
   styles: [`
@@ -64,9 +64,13 @@ export class FoodCreateComponent {
   private foodsService = inject(FoodsService);
   private router = inject(Router);
 
+  loading = signal(false);
+
   onCreate(data: Partial<Food>) {
-    this.foodsService.create({ ...data, source: 'CUSTOM' }).subscribe(() => {
-      this.router.navigate(['/aliments']);
+    this.loading.set(true);
+    this.foodsService.create({ ...data, source: 'CUSTOM' }).subscribe({
+      next: () => this.router.navigate(['/aliments']),
+      error: () => this.loading.set(false),
     });
   }
 }
