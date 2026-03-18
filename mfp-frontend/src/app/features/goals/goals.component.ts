@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,7 +11,35 @@ import { GoalsService } from '../../core/services/goals.service';
   standalone: true,
   imports: [NgFor, ReactiveFormsModule, MatIconModule, MatButtonModule],
   template: `
-    <form [formGroup]="form" (ngSubmit)="onSave()" class="goals-page page">
+    @if (loading()) {
+      <div class="goals-page page">
+        <div class="sk sk-g-cal"></div>
+        <div class="form-section">
+          <div class="sk-g-sec-hd">
+            <div class="sk sk-g-icon"></div>
+            <div class="sk sk-g-title"></div>
+          </div>
+          <div class="sk-g-row" *ngFor="let r of [1,2,3]">
+            <div class="sk sk-g-dot"></div>
+            <div class="sk sk-g-lbl"></div>
+            <div class="sk sk-g-input"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="sk-g-sec-hd">
+            <div class="sk sk-g-icon"></div>
+            <div class="sk sk-g-title"></div>
+          </div>
+          <div class="sk-g-row" *ngFor="let r of [1,2,3,4]">
+            <div class="sk sk-g-dot"></div>
+            <div class="sk sk-g-lbl"></div>
+            <div class="sk sk-g-input"></div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="goals-page page" [style.display]="loading() ? 'none' : ''">
 
       <!-- Calories card -->
       <div class="calories-card">
@@ -78,13 +106,19 @@ import { GoalsService } from '../../core/services/goals.service';
 
     </form>
 
-    <!-- Save FAB -->
-    <div class="fab-wrap">
-      <button mat-fab extended color="primary" [disabled]="form.invalid" (click)="onSave()">
-        <mat-icon>check</mat-icon>
-        Enregistrer
-      </button>
-    </div>
+    @if (!loading()) {
+      <div class="fab-wrap">
+        <button mat-fab extended color="primary" [disabled]="form.invalid" (click)="onSave()">
+          @if (saving()) {
+            <span class="btn-spinner"></span>
+            Enregistrement…
+          } @else {
+            <mat-icon>check</mat-icon>
+            Enregistrer
+          }
+        </button>
+      </div>
+    }
   `,
   styles: [`
     .goals-page {
@@ -234,6 +268,17 @@ import { GoalsService } from '../../core/services/goals.service';
       color: var(--text-3, #9aada5);
     }
 
+    /* Skeleton shapes */
+    .sk-g-cal { height: 120px; border-radius: 20px; }
+    .sk-g-sec-hd { display: flex; align-items: center; gap: 8px; padding: 12px 16px 10px; border-bottom: 1px solid var(--border); }
+    .sk-g-icon  { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+    .sk-g-title { width: 110px; height: 12px; border-radius: 4px; }
+    .sk-g-row   { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .sk-g-row:last-child { border-bottom: none; }
+    .sk-g-dot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .sk-g-lbl   { flex: 1; height: 12px; max-width: 100px; border-radius: 4px; }
+    .sk-g-input { width: 72px; height: 30px; border-radius: 8px; flex-shrink: 0; }
+
     /* FAB */
     .fab-wrap {
       position: fixed;
@@ -248,6 +293,9 @@ export class GoalsComponent implements OnInit {
   private goalsService = inject(GoalsService);
   private snack = inject(MatSnackBar);
   private fb = inject(FormBuilder);
+
+  loading = signal(true);
+  saving = signal(false);
 
   macroFields = [
     { key: 'proteins', label: 'Protéines', color: 'protein' },
@@ -274,12 +322,20 @@ export class GoalsComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.goalsService.get().subscribe((g) => this.form.patchValue(g as any));
+    this.goalsService.get().subscribe({
+      next: (g) => { this.form.patchValue(g as any); this.loading.set(false); },
+      error: () => this.loading.set(false),
+    });
   }
 
   onSave() {
-    this.goalsService.update(this.form.value as any).subscribe(() => {
-      this.snack.open('Objectifs enregistrés', 'OK', { duration: 2000 });
+    this.saving.set(true);
+    this.goalsService.update(this.form.value as any).subscribe({
+      next: () => {
+        this.snack.open('Objectifs enregistrés', 'OK', { duration: 2000 });
+        this.saving.set(false);
+      },
+      error: () => this.saving.set(false),
     });
   }
 }
