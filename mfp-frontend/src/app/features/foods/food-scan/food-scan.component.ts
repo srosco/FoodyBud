@@ -1,9 +1,10 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Location, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { BrowserMultiFormatReader } from '@zxing/browser';
+import { IScannerControls } from '@zxing/browser';
 import { FoodsService } from '../../../core/services/foods.service';
 import { FoodFormComponent } from '../food-form/food-form.component';
 import { Food } from '../../../core/models/food.model';
@@ -249,7 +250,7 @@ import { Food } from '../../../core/models/food.model';
     .found-banner mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
   `],
 })
-export class FoodScanComponent implements OnInit, AfterViewInit, OnDestroy {
+export class FoodScanComponent implements AfterViewInit, OnDestroy {
   @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
   location = inject(Location);
   private foodsService = inject(FoodsService);
@@ -260,29 +261,19 @@ export class FoodScanComponent implements OnInit, AfterViewInit, OnDestroy {
   scannedData: Partial<Food> | null = null;
   error = '';
   private reader = new BrowserMultiFormatReader();
-  private stream: MediaStream | null = null;
-  private viewReady = false;
+  private controls: IScannerControls | null = null;
 
-  async ngOnInit() {
+  async ngAfterViewInit() {
     if (!navigator.mediaDevices?.getUserMedia) { this.manualMode = true; return; }
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      this.tryStartScan();
+      this.controls = await this.reader.decodeFromConstraints(
+        { video: { facingMode: 'environment' } },
+        this.videoEl.nativeElement,
+        (result) => { if (result) this.lookup(result.getText()); },
+      );
     } catch {
       this.manualMode = true;
     }
-  }
-
-  ngAfterViewInit() {
-    this.viewReady = true;
-    this.tryStartScan();
-  }
-
-  private tryStartScan() {
-    if (!this.stream || !this.viewReady || !this.videoEl) return;
-    this.reader.decodeFromStream(this.stream, this.videoEl.nativeElement, (result) => {
-      if (result) this.lookup(result.getText());
-    });
   }
 
   lookupManual() { if (this.manualBarcode) this.lookup(this.manualBarcode); }
@@ -297,12 +288,12 @@ export class FoodScanComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           this.scannedData = { ...data, source: 'OFF' };
         }
-        this.stopStream();
+        this.controls?.stop();
       },
       error: () => {
         this.error = 'Erreur lors de la recherche';
         this.scannedData = { barcode, source: 'CUSTOM' };
-        this.stopStream();
+        this.controls?.stop();
       },
     });
   }
@@ -313,6 +304,5 @@ export class FoodScanComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() { this.stopStream(); }
-  private stopStream() { this.stream?.getTracks().forEach((t) => t.stop()); }
+  ngOnDestroy() { this.controls?.stop(); }
 }
