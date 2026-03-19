@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Location, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -249,7 +249,7 @@ import { Food } from '../../../core/models/food.model';
     .found-banner mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
   `],
 })
-export class FoodScanComponent implements OnInit, OnDestroy {
+export class FoodScanComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
   location = inject(Location);
   private foodsService = inject(FoodsService);
@@ -261,20 +261,26 @@ export class FoodScanComponent implements OnInit, OnDestroy {
   error = '';
   private reader = new BrowserMultiFormatReader();
   private stream: MediaStream | null = null;
+  private viewReady = false;
 
   async ngOnInit() {
-    if (!navigator.mediaDevices) { this.manualMode = true; return; }
+    if (!navigator.mediaDevices?.getUserMedia) { this.manualMode = true; return; }
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      setTimeout(() => this.startScan(), 200);
+      this.tryStartScan();
     } catch {
       this.manualMode = true;
     }
   }
 
-  private startScan() {
-    if (!this.videoEl) return;
-    this.reader.decodeFromStream(this.stream!, this.videoEl.nativeElement, (result) => {
+  ngAfterViewInit() {
+    this.viewReady = true;
+    this.tryStartScan();
+  }
+
+  private tryStartScan() {
+    if (!this.stream || !this.viewReady || !this.videoEl) return;
+    this.reader.decodeFromStream(this.stream, this.videoEl.nativeElement, (result) => {
       if (result) this.lookup(result.getText());
     });
   }
