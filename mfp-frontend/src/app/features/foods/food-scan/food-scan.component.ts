@@ -3,8 +3,7 @@ import { Router } from '@angular/router';
 import { Location, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { BrowserMultiFormatReader } from '@zxing/browser';
-import { IScannerControls } from '@zxing/browser';
+import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
 import { FoodsService } from '../../../core/services/foods.service';
 import { FoodFormComponent } from '../food-form/food-form.component';
 import { Food } from '../../../core/models/food.model';
@@ -262,15 +261,30 @@ export class FoodScanComponent implements AfterViewInit, OnDestroy {
   error = '';
   private reader = new BrowserMultiFormatReader();
   private controls: IScannerControls | null = null;
+  private stream: MediaStream | null = null;
 
   async ngAfterViewInit() {
     if (!navigator.mediaDevices?.getUserMedia) { this.manualMode = true; return; }
     try {
-      this.controls = await this.reader.decodeFromConstraints(
-        { video: { facingMode: 'environment' } },
-        this.videoEl.nativeElement,
-        (result) => { if (result) this.lookup(result.getText()); },
-      );
+      const video = this.videoEl.nativeElement;
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = this.stream;
+      video.muted = true;
+      await video.play();
+      // Wait until video has actual frame dimensions (mobile can be slow)
+      await new Promise<void>((resolve, reject) => {
+        if (video.videoWidth > 0) { resolve(); return; }
+        const check = () => {
+          if (video.videoWidth > 0) resolve();
+          else requestAnimationFrame(check);
+        };
+        requestAnimationFrame(check);
+        setTimeout(() => reject(new Error('video dimensions timeout')), 8000);
+      });
+      // Now safe to start ZXing scan loop (canvas will have real dimensions)
+      this.controls = this.reader.scan(video, (result) => {
+        if (result) this.lookup(result.getText());
+      });
     } catch {
       this.manualMode = true;
     }
@@ -288,12 +302,12 @@ export class FoodScanComponent implements AfterViewInit, OnDestroy {
         } else {
           this.scannedData = { ...data, source: 'OFF' };
         }
-        this.controls?.stop();
+        this.stopAll();
       },
       error: () => {
         this.error = 'Erreur lors de la recherche';
         this.scannedData = { barcode, source: 'CUSTOM' };
-        this.controls?.stop();
+        this.stopAll();
       },
     });
   }
@@ -304,5 +318,9 @@ export class FoodScanComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() { this.controls?.stop(); }
+  ngOnDestroy() { this.stopAll(); }
+  private stopAll() {
+    this.controls?.stop();
+    this.stream?.getTracks().forEach(t => t.stop());
+  }
 }
