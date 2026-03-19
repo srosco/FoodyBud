@@ -4,6 +4,8 @@ import { Location, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { BrowserMultiFormatReader, IScannerControls } from '@zxing/browser';
+import BarcodeFormat from '@zxing/library/esm/core/BarcodeFormat';
+import DecodeHintType from '@zxing/library/esm/core/DecodeHintType';
 import { FoodsService } from '../../../core/services/foods.service';
 import { FoodFormComponent } from '../food-form/food-form.component';
 import { Food } from '../../../core/models/food.model';
@@ -259,15 +261,32 @@ export class FoodScanComponent implements AfterViewInit, OnDestroy {
   manualBarcode = '';
   scannedData: Partial<Food> | null = null;
   error = '';
-  private reader = new BrowserMultiFormatReader();
+  private reader: BrowserMultiFormatReader;
   private controls: IScannerControls | null = null;
   private stream: MediaStream | null = null;
+
+  constructor() {
+    // Restrict to food-relevant barcode formats for faster detection
+    const hints = new Map<DecodeHintType, any>();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+      BarcodeFormat.CODE_128,
+    ]);
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    this.reader = new BrowserMultiFormatReader(hints, {
+      delayBetweenScanAttempts: 80,  // ~12 scans/sec instead of 2
+      delayBetweenScanSuccess: 300,
+    });
+  }
 
   async ngAfterViewInit() {
     if (!navigator.mediaDevices?.getUserMedia) { this.manualMode = true; return; }
     try {
       const video = this.videoEl.nativeElement;
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      this.stream = await this.getCamera();
       video.srcObject = this.stream;
       video.muted = true;
       await video.play();
@@ -287,6 +306,15 @@ export class FoodScanComponent implements AfterViewInit, OnDestroy {
       });
     } catch {
       this.manualMode = true;
+    }
+  }
+
+  /** Try back camera first, fallback to any camera (Brave compatibility) */
+  private async getCamera(): Promise<MediaStream> {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    } catch {
+      return await navigator.mediaDevices.getUserMedia({ video: true });
     }
   }
 
